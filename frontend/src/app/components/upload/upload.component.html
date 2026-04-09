@@ -1,0 +1,79 @@
+<div class="upload-container">
+  <h1>Upload Files</h1>
+
+  <div class="upload-cards">
+    <!-- XLS Upload -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>table_chart</mat-icon> Bank Account (XLS / XLSX)
+        </mat-card-title>
+        <mat-card-subtitle>Upload your bank account statement</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="upload-area">
+          <button mat-raised-button color="primary" (click)="xlsInput.click()" [disabled]="xlsLoading">
+            <mat-icon>upload_file</mat-icon>
+            Select XLS/XLSX File
+          </button>
+          <input #xlsInput type="file" accept=".xls,.xlsx" hidden (change)="onXlsFileSelected($event)" />
+        </div>
+
+        <mat-progress-bar mode="indeterminate" *ngIf="xlsLoading"></mat-progress-bar>
+
+        <div class="result" *ngIf="xlsResult">
+          <p class="success">✓ {{ xlsResult.length }} transactions imported successfully.</p>
+          <mat-list dense>
+            <mat-list-item *ngFor="let tx of xlsResult | slice:0:5">
+              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
+            </mat-list-item>
+            <mat-list-item *ngIf="xlsResult.length > 5">
+              ... and {{ xlsResult.length - 5 }} more
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div class="error-message" *ngIf="xlsError">
+          <p>{{ xlsError }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- PDF Upload -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>picture_as_pdf</mat-icon> Credit Card Statement (PDF)
+        </mat-card-title>
+        <mat-card-subtitle>Upload your credit card PDF summary</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="upload-area">
+          <button mat-raised-button color="accent" (click)="pdfInput.click()" [disabled]="pdfLoading">
+            <mat-icon>upload_file</mat-icon>
+            Select PDF File
+          </button>
+          <input #pdfInput type="file" accept=".pdf" hidden (change)="onPdfFileSelected($event)" />
+        </div>
+
+        <mat-progress-bar mode="indeterminate" *ngIf="pdfLoading"></mat-progress-bar>
+
+        <div class="result" *ngIf="pdfResult">
+          <p class="success">✓ {{ pdfResult.length }} transactions imported successfully.</p>
+          <mat-list dense>
+            <mat-list-item *ngFor="let tx of pdfResult | slice:0:5">
+              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
+            </mat-list-item>
+            <mat-list-item *ngIf="pdfResult.length > 5">
+              ... and {{ pdfResult.length - 5 }} more
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div class="error-message" *ngIf="pdfError">
+          <p>{{ pdfError }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
