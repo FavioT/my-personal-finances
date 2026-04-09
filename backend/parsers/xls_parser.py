@@ -1,5 +1,5 @@
-from datetime import date
 from typing import Optional
+import io
 import pandas as pd
 from fastapi import HTTPException
 
@@ -20,9 +20,41 @@ def _find_column(df_columns: list[str], candidates: list[str]) -> Optional[str]:
     return None
 
 
-def parse_xls(file, source_name: str) -> list[dict]:
+def _detect_header_row(content: bytes) -> int:
+    """Scan the first 15 rows to find the one that contains date/description headers."""
     try:
-        df = pd.read_excel(file)
+        preview = pd.read_excel(io.BytesIO(content), header=None, nrows=15)
+        for i, row in preview.iterrows():
+            values_lower = [str(v).lower().strip() for v in row.values]
+            has_date = any(v in DATE_COLS for v in values_lower)
+            has_desc = any(v in DESC_COLS for v in values_lower)
+            if has_date and has_desc:
+                return int(i)
+    except Exception:
+        pass
+    return 0
+
+
+def _parse_amount(raw) -> float:
+    """Parse European-format numbers (1.234.567,89 → 1234567.89)."""
+    s = str(raw).strip().replace("\xa0", "").replace(" ", "")
+    if not s or s.lower() == "nan":
+        return 0.0
+    # Dots are thousands separators, comma is decimal separator
+    s = s.replace(".", "").replace(",", ".")
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+
+
+def parse_xls(file, source_name: str) -> list[dict]:
+    content = file.read()
+
+    header_row = _detect_header_row(content)
+
+    try:
+        df = pd.read_excel(io.BytesIO(content), header=header_row)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Cannot read Excel file: {exc}")
 
@@ -47,11 +79,18 @@ def parse_xls(file, source_name: str) -> list[dict]:
             ),
         )
 
+    # If a nameless column sits immediately after the description column,
+    # treat it as additional description context (e.g. bank channel / branch).
+    desc_col_idx = columns.index(desc_col)
+    extra_desc_col: Optional[str] = None
+    if desc_col_idx + 1 < len(columns) and str(columns[desc_col_idx + 1]).startswith("Unnamed:"):
+        extra_desc_col = columns[desc_col_idx + 1]
+
     transactions = []
     for _, row in df.iterrows():
         raw_date = row[date_col]
         try:
-            parsed_date = pd.to_datetime(raw_date).date()
+            parsed_date = pd.to_datetime(raw_date, dayfirst=True).date()
         except Exception:
             continue
 
@@ -59,21 +98,15 @@ def parse_xls(file, source_name: str) -> list[dict]:
         if not description or description.lower() == "nan":
             continue
 
+        if extra_desc_col:
+            extra = str(row[extra_desc_col]).strip()
+            if extra and extra.lower() != "nan":
+                description = f"{description} | {extra}"
+
         if amount_col:
-            try:
-                amount = float(str(row[amount_col]).replace(",", "."))
-            except (ValueError, TypeError):
-                amount = 0.0
+            amount = _parse_amount(row[amount_col])
         elif debit_col and credit_col:
-            try:
-                debit = float(str(row[debit_col]).replace(",", ".") or 0)
-            except (ValueError, TypeError):
-                debit = 0.0
-            try:
-                credit = float(str(row[credit_col]).replace(",", ".") or 0)
-            except (ValueError, TypeError):
-                credit = 0.0
-            amount = credit - debit
+            amount = _parse_amount(row[credit_col]) - _parse_amount(row[debit_col])
         else:
             raise HTTPException(
                 status_code=400,

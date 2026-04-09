@@ -16,9 +16,8 @@ A personal finance dashboard that processes bank account summaries (`.xls`/`.xls
 ## Running the Backend
 
 ```bash
-cd backend
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+.venv\Scripts\activate          # en lugar de "source"
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
