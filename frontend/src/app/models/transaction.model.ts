@@ -6,7 +6,7 @@ export interface Transaction {
   currency: string;
   category: string | null;
   source: string;
-  source_type: 'xls' | 'pdf';
+  source_type: 'xls' | 'credit_card_bbva' | 'credit_card_macro';
   created_at: string;
 }
 

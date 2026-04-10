@@ -39,39 +39,106 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- PDF Upload -->
+    <!-- BBVA Credit Card -->
     <mat-card>
       <mat-card-header>
         <mat-card-title>
-          <mat-icon>picture_as_pdf</mat-icon> Credit Card Statement (PDF)
+          <mat-icon>credit_card</mat-icon> BBVA Credit Card Statement
         </mat-card-title>
-        <mat-card-subtitle>Upload your credit card PDF summary</mat-card-subtitle>
+        <mat-card-subtitle>Paste your BBVA credit card statement text below</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
+        <mat-form-field class="statement-field" appearance="outline">
+          <mat-label>BBVA statement text</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="bbvaText"
+            rows="8"
+            placeholder="Paste the text from your BBVA credit card statement here..."
+            [disabled]="bbvaLoading"
+          ></textarea>
+        </mat-form-field>
+
         <div class="upload-area">
-          <button mat-raised-button color="accent" (click)="pdfInput.click()" [disabled]="pdfLoading">
-            <mat-icon>upload_file</mat-icon>
-            Select PDF File
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="onBbvaSubmit()"
+            [disabled]="bbvaLoading || !bbvaText.trim()"
+          >
+            <mat-icon>send</mat-icon>
+            Import BBVA Transactions
           </button>
-          <input #pdfInput type="file" accept=".pdf" hidden (change)="onPdfFileSelected($event)" />
         </div>
 
-        <mat-progress-bar mode="indeterminate" *ngIf="pdfLoading"></mat-progress-bar>
+        <mat-progress-bar mode="indeterminate" *ngIf="bbvaLoading"></mat-progress-bar>
 
-        <div class="result" *ngIf="pdfResult">
-          <p class="success">✓ {{ pdfResult.length }} transactions imported successfully.</p>
+        <div class="result" *ngIf="bbvaResult">
+          <p class="success">✓ {{ bbvaResult.length }} transactions imported successfully.</p>
           <mat-list dense>
-            <mat-list-item *ngFor="let tx of pdfResult | slice:0:5">
+            <mat-list-item *ngFor="let tx of bbvaResult | slice:0:5">
               {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
             </mat-list-item>
-            <mat-list-item *ngIf="pdfResult.length > 5">
-              ... and {{ pdfResult.length - 5 }} more
+            <mat-list-item *ngIf="bbvaResult.length > 5">
+              ... and {{ bbvaResult.length - 5 }} more
             </mat-list-item>
           </mat-list>
         </div>
 
-        <div class="error-message" *ngIf="pdfError">
-          <p>{{ pdfError }}</p>
+        <div class="error-message" *ngIf="bbvaError">
+          <p>{{ bbvaError }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Macro Credit Card -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>credit_card</mat-icon> Macro Credit Card Statement
+        </mat-card-title>
+        <mat-card-subtitle>Paste your Macro credit card statement text below</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field class="statement-field" appearance="outline">
+          <mat-label>Macro statement text</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="macroText"
+            rows="8"
+            placeholder="Paste the text from your Macro credit card statement here..."
+            [disabled]="macroLoading"
+          ></textarea>
+        </mat-form-field>
+
+        <div class="upload-area">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="onMacroSubmit()"
+            [disabled]="macroLoading || !macroText.trim()"
+          >
+            <mat-icon>send</mat-icon>
+            Import Macro Transactions
+          </button>
+        </div>
+
+        <mat-progress-bar mode="indeterminate" *ngIf="macroLoading"></mat-progress-bar>
+
+        <div class="result" *ngIf="macroResult">
+          <p class="success">✓ {{ macroResult.length }} transactions imported successfully.</p>
+          <mat-list dense>
+            <mat-list-item *ngFor="let tx of macroResult | slice:0:5">
+              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
+            </mat-list-item>
+            <mat-list-item *ngIf="macroResult.length > 5">
+              ... and {{ macroResult.length - 5 }} more
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div class="error-message" *ngIf="macroError">
+          <p>{{ macroError }}</p>
         </div>
       </mat-card-content>
     </mat-card>

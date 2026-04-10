@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Transaction
-from schemas import TransactionResponse
-from parsers import xls_parser, pdf_parser
+from schemas import TransactionResponse, CreditCardTextInput
+from parsers import xls_parser, credit_card_parser
 
 router = APIRouter()
 
@@ -27,7 +27,13 @@ async def upload_xls(file: UploadFile = File(...), db: Session = Depends(get_db)
     return _save_transactions(db, parsed)
 
 
-@router.post("/pdf", response_model=List[TransactionResponse])
-async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    parsed = pdf_parser.parse_pdf(file.file, source_name=file.filename)
+@router.post("/credit-card/bbva", response_model=List[TransactionResponse])
+async def upload_credit_card_bbva(body: CreditCardTextInput, db: Session = Depends(get_db)):
+    parsed = credit_card_parser.parse_credit_card_text(body.text, bank="bbva")
+    return _save_transactions(db, parsed)
+
+
+@router.post("/credit-card/macro", response_model=List[TransactionResponse])
+async def upload_credit_card_macro(body: CreditCardTextInput, db: Session = Depends(get_db)):
+    parsed = credit_card_parser.parse_credit_card_text(body.text, bank="macro")
     return _save_transactions(db, parsed)

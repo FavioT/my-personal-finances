@@ -17,9 +17,11 @@ export class UploadService {
     return this.http.post<Transaction[]>(`${API_URL}/upload/xls`, formData);
   }
 
-  uploadPdf(file: File): Observable<Transaction[]> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<Transaction[]>(`${API_URL}/upload/pdf`, formData);
+  uploadBbvaText(text: string): Observable<Transaction[]> {
+    return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/bbva`, { text });
+  }
+
+  uploadMacroText(text: string): Observable<Transaction[]> {
+    return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/macro`, { text });
   }
 }
