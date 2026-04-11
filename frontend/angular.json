@@ -42,7 +42,6 @@
               }
             ],
             "styles": [
-              "tuicss/dist/tuicss.min.css",
               "src/styles.scss"
             ],
             "scripts": [
