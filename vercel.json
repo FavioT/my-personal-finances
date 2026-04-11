@@ -5,7 +5,7 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/dist/frontend/browser"
+        "distDir": "dist/frontend/browser"
       }
     },
     {
@@ -19,8 +19,11 @@
       "dest": "api/index.py"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "frontend/dist/frontend/browser/$1"
+      "dest": "/index.html"
     }
   ]
 }
