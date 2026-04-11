@@ -19,6 +19,10 @@ def get_transactions(
     query = db.query(Transaction)
     if source_type:
         query = query.filter(Transaction.source_type == source_type)
+    else:
+        # By default, exclude credit card detail transactions;
+        # they are shown in the credit-card-summary endpoint instead.
+        query = query.filter(~Transaction.source_type.like("credit_card_%"))
     if date_from:
         query = query.filter(Transaction.date >= date_from)
     if date_to:
@@ -74,7 +78,6 @@ def get_credit_card_summary(db: Session = Depends(get_db)):
                 "credit_card_bbva_mastercard",
                 "credit_card_macro",
             ]),
-            Transaction.installment_total > 1,
         )
         .order_by(Transaction.date)
         .all()
@@ -88,7 +91,9 @@ def get_credit_card_summary(db: Session = Depends(get_db)):
     for card, card_txs in by_card.items():
         items = []
         for tx in card_txs:
-            pending = tx.installment_total - tx.installment_current
+            inst_current = tx.installment_current if tx.installment_current is not None else 1
+            inst_total = tx.installment_total if tx.installment_total is not None else 1
+            pending = inst_total - inst_current
             payoff = _add_months(tx.date, pending)
             monthly = abs(tx.amount)
             items.append(
@@ -97,11 +102,11 @@ def get_credit_card_summary(db: Session = Depends(get_db)):
                     description=tx.description,
                     date=tx.date,
                     monthly_amount=round(monthly, 2),
-                    installment_current=tx.installment_current,
-                    installment_total=tx.installment_total,
+                    installment_current=inst_current,
+                    installment_total=inst_total,
                     pending_installments=pending,
                     remaining_debt=round(monthly * pending, 2),
-                    total_debt=round(monthly * tx.installment_total, 2),
+                    total_debt=round(monthly * inst_total, 2),
                     payoff_month=payoff.strftime("%Y-%m"),
                 )
             )

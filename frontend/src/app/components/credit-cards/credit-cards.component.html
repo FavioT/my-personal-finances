@@ -10,7 +10,7 @@
 
 <!-- Empty state -->
 <div *ngIf="!loading && !error && cards.length === 0" class="tui-window full-width" style="padding:16px;margin-bottom:16px">
-  <p class="white-text">No hay cuotas pendientes. Importá tu resumen de tarjeta de crédito desde
+  <p class="white-text">No hay gastos con tarjeta de crédito. Importá tu resumen de tarjeta de crédito desde
     <a routerLink="/upload" class="cyan-255-text">Subir archivos</a>.
   </p>
 </div>
@@ -44,7 +44,7 @@
       <!-- Detail expandable -->
       <details>
         <summary class="white-text" style="cursor:pointer;margin-bottom:8px">
-          Ver detalle ({{ card.items.length }} cuotas)
+          Ver detalle ({{ card.items.length }} movimientos)
         </summary>
         <table class="tui-table hovered-cyan" style="width:100%">
           <thead>
