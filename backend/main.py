@@ -1,11 +1,17 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env before any other local imports so DATABASE_URL is available
+# when database.py creates the SQLAlchemy engine.
+# Looks for .env in the backend/ dir first, then the project root.
+load_dotenv(dotenv_path=Path(__file__).parent / '.env')
+load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import upload, transactions
-from dotenv import load_dotenv;
-
-load_dotenv()
 
 # Creates all tables if they don't exist (works with both SQLite and PostgreSQL)
 Base.metadata.create_all(bind=engine)
