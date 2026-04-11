@@ -42,11 +42,11 @@
               }
             ],
             "styles": [
-              "node_modules/tuicss/dist/tuicss.min.css",
+              "tuicss/dist/tuicss.min.css",
               "src/styles.scss"
             ],
             "scripts": [
-              "node_modules/tuicss/dist/tuicss.min.js"
+              "tuicss/dist/tuicss.min.js"
             ],
             "optimization": {
               "fonts": false

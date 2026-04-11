@@ -3,13 +3,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# On Vercel (read-only filesystem) the DB lives in /tmp.
-# Locally it lives next to the backend folder.
-_DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), 'finances.db')
-_db_path = os.environ.get('DATABASE_PATH', _DEFAULT_DB_PATH)
-DATABASE_URL = f'sqlite:///{_db_path}'
+# Set DATABASE_URL env var to your Neon PostgreSQL connection string.
+# Example: postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL = os.environ.get(
+    'DATABASE_URL',
+    'sqlite:///./finances.db'  # fallback for local dev without Neon
+)
 
-engine = create_engine(DATABASE_URL, connect_args={'check_same_thread': False})
+# SQLite needs check_same_thread=False; PostgreSQL does not need it
+_connect_args = {'check_same_thread': False} if DATABASE_URL.startswith('sqlite') else {}
+
+engine = create_engine(DATABASE_URL, connect_args=_connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
