@@ -27,9 +27,6 @@
             <th>Descripción</th>
             <th>Monto</th>
             <th>Moneda</th>
-            <th>Tipo</th>
-            <th>Origen</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -40,11 +37,6 @@
               {{ t.amount | number:'1.2-2' }}
             </td>
             <td>{{ t.currency }}</td>
-            <td>{{ t.source_type }}</td>
-            <td>{{ t.source }}</td>
-            <td>
-              <button class="tui-button red-168 white-text" (click)="deleteTransaction(t.id)">X</button>
-            </td>
           </tr>
         </tbody>
       </table>
