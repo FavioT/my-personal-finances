@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -17,18 +18,27 @@ for _col in ["installment_current INTEGER", "installment_total INTEGER"]:
 
 app = FastAPI(title="My Personal Finances API", version="1.0.0")
 
+# CORS: allow localhost for dev + any Vercel deployment URL via env var
+_extra_origin = os.environ.get('FRONTEND_ORIGIN', '')
+_origins = [
+    'http://localhost:4200',
+    'http://localhost:4201',
+]
+if _extra_origin:
+    _origins.append(_extra_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
-app.include_router(upload.router, prefix="/upload", tags=["upload"])
-app.include_router(transactions.router, prefix="/transactions", tags=["transactions"])
+app.include_router(upload.router, prefix='/upload', tags=['upload'])
+app.include_router(transactions.router, prefix='/transactions', tags=['transactions'])
 
 
-@app.get("/")
+@app.get('/')
 def root():
-    return {"message": "My Personal Finances API is running"}
+    return {'message': 'My Personal Finances API is running'}

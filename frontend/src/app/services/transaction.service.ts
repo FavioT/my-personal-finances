@@ -3,8 +3,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Transaction, SummaryResponse, TransactionFilters } from '../models/transaction.model';
 import { CreditCardSummaryResponse } from '../models/credit-card-summary.model';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = environment.apiUrl;
 
 @Injectable({
   providedIn: 'root',

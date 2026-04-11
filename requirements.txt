@@ -1,0 +1,9 @@
+fastapi
+mangum
+pandas
+openpyxl
+xlrd
+pdfplumber
+sqlalchemy
+python-multipart
+pydantic
