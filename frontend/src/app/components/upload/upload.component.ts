@@ -40,6 +40,16 @@ export class UploadComponent {
   bbvaResult: Transaction[] | null = null;
   bbvaError: string | null = null;
 
+  bbvaVisaText = '';
+  bbvaVisaLoading = false;
+  bbvaVisaResult: Transaction[] | null = null;
+  bbvaVisaError: string | null = null;
+
+  bbvaMastercardText = '';
+  bbvaMastercardLoading = false;
+  bbvaMastercardResult: Transaction[] | null = null;
+  bbvaMastercardError: string | null = null;
+
   macroText = '';
   macroLoading = false;
   macroResult: Transaction[] | null = null;
@@ -86,6 +96,48 @@ export class UploadComponent {
       error: (err) => {
         this.bbvaError = err.error?.detail ?? 'Error processing BBVA statement.';
         this.bbvaLoading = false;
+      },
+    });
+  }
+
+  onBbvaVisaSubmit(): void {
+    if (!this.bbvaVisaText.trim()) return;
+
+    this.bbvaVisaLoading = true;
+    this.bbvaVisaResult = null;
+    this.bbvaVisaError = null;
+
+    this.uploadService.uploadBbvaVisaText(this.bbvaVisaText).subscribe({
+      next: (transactions) => {
+        this.bbvaVisaResult = transactions;
+        this.bbvaVisaLoading = false;
+        this.bbvaVisaText = '';
+        this.snackBar.open(`${transactions.length} transactions imported from BBVA VISA`, 'Close', { duration: 4000 });
+      },
+      error: (err) => {
+        this.bbvaVisaError = err.error?.detail ?? 'Error processing BBVA VISA statement.';
+        this.bbvaVisaLoading = false;
+      },
+    });
+  }
+
+  onBbvaMastercardSubmit(): void {
+    if (!this.bbvaMastercardText.trim()) return;
+
+    this.bbvaMastercardLoading = true;
+    this.bbvaMastercardResult = null;
+    this.bbvaMastercardError = null;
+
+    this.uploadService.uploadBbvaMastercardText(this.bbvaMastercardText).subscribe({
+      next: (transactions) => {
+        this.bbvaMastercardResult = transactions;
+        this.bbvaMastercardLoading = false;
+        this.bbvaMastercardText = '';
+        this.snackBar.open(`${transactions.length} transactions imported from BBVA Mastercard`, 'Close', { duration: 4000 });
+      },
+      error: (err) => {
+        this.bbvaMastercardError = err.error?.detail ?? 'Error processing BBVA Mastercard statement.';
+        this.bbvaMastercardLoading = false;
       },
     });
   }

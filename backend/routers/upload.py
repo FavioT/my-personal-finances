@@ -33,6 +33,18 @@ async def upload_credit_card_bbva(body: CreditCardTextInput, db: Session = Depen
     return _save_transactions(db, parsed)
 
 
+@router.post("/credit-card/bbva-visa", response_model=List[TransactionResponse])
+async def upload_credit_card_bbva_visa(body: CreditCardTextInput, db: Session = Depends(get_db)):
+    parsed = credit_card_parser.parse_credit_card_text(body.text, bank="bbva_visa")
+    return _save_transactions(db, parsed)
+
+
+@router.post("/credit-card/bbva-mastercard", response_model=List[TransactionResponse])
+async def upload_credit_card_bbva_mastercard(body: CreditCardTextInput, db: Session = Depends(get_db)):
+    parsed = credit_card_parser.parse_credit_card_text(body.text, bank="bbva_mastercard")
+    return _save_transactions(db, parsed)
+
+
 @router.post("/credit-card/macro", response_model=List[TransactionResponse])
 async def upload_credit_card_macro(body: CreditCardTextInput, db: Session = Depends(get_db)):
     parsed = credit_card_parser.parse_credit_card_text(body.text, bank="macro")

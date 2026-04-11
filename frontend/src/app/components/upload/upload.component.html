@@ -39,23 +39,23 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- BBVA Credit Card -->
+    <!-- BBVA VISA Credit Card -->
     <mat-card>
       <mat-card-header>
         <mat-card-title>
-          <mat-icon>credit_card</mat-icon> BBVA Credit Card Statement
+          <mat-icon>credit_card</mat-icon> BBVA VISA
         </mat-card-title>
-        <mat-card-subtitle>Paste your BBVA credit card statement text below</mat-card-subtitle>
+        <mat-card-subtitle>Pegá el texto del resumen BBVA VISA</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <mat-form-field class="statement-field" appearance="outline">
-          <mat-label>BBVA statement text</mat-label>
+          <mat-label>Texto resumen BBVA VISA</mat-label>
           <textarea
             matInput
-            [(ngModel)]="bbvaText"
+            [(ngModel)]="bbvaVisaText"
             rows="8"
-            placeholder="Paste the text from your BBVA credit card statement here..."
-            [disabled]="bbvaLoading"
+            placeholder="Pegá aquí el texto del resumen BBVA VISA..."
+            [disabled]="bbvaVisaLoading"
           ></textarea>
         </mat-form-field>
 
@@ -63,30 +63,82 @@
           <button
             mat-raised-button
             color="accent"
-            (click)="onBbvaSubmit()"
-            [disabled]="bbvaLoading || !bbvaText.trim()"
+            (click)="onBbvaVisaSubmit()"
+            [disabled]="bbvaVisaLoading || !bbvaVisaText.trim()"
           >
             <mat-icon>send</mat-icon>
-            Import BBVA Transactions
+            Importar BBVA VISA
           </button>
         </div>
 
-        <mat-progress-bar mode="indeterminate" *ngIf="bbvaLoading"></mat-progress-bar>
+        <mat-progress-bar mode="indeterminate" *ngIf="bbvaVisaLoading"></mat-progress-bar>
 
-        <div class="result" *ngIf="bbvaResult">
-          <p class="success">✓ {{ bbvaResult.length }} transactions imported successfully.</p>
+        <div class="result" *ngIf="bbvaVisaResult">
+          <p class="success">✓ {{ bbvaVisaResult.length }} transacciones importadas correctamente.</p>
           <mat-list dense>
-            <mat-list-item *ngFor="let tx of bbvaResult | slice:0:5">
+            <mat-list-item *ngFor="let tx of bbvaVisaResult | slice:0:5">
               {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
             </mat-list-item>
-            <mat-list-item *ngIf="bbvaResult.length > 5">
-              ... and {{ bbvaResult.length - 5 }} more
+            <mat-list-item *ngIf="bbvaVisaResult.length > 5">
+              ... y {{ bbvaVisaResult.length - 5 }} más
             </mat-list-item>
           </mat-list>
         </div>
 
-        <div class="error-message" *ngIf="bbvaError">
-          <p>{{ bbvaError }}</p>
+        <div class="error-message" *ngIf="bbvaVisaError">
+          <p>{{ bbvaVisaError }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- BBVA Mastercard Credit Card -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>credit_card</mat-icon> BBVA Mastercard
+        </mat-card-title>
+        <mat-card-subtitle>Pegá el texto del resumen BBVA Mastercard</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field class="statement-field" appearance="outline">
+          <mat-label>Texto resumen BBVA Mastercard</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="bbvaMastercardText"
+            rows="8"
+            placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."
+            [disabled]="bbvaMastercardLoading"
+          ></textarea>
+        </mat-form-field>
+
+        <div class="upload-area">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="onBbvaMastercardSubmit()"
+            [disabled]="bbvaMastercardLoading || !bbvaMastercardText.trim()"
+          >
+            <mat-icon>send</mat-icon>
+            Importar BBVA Mastercard
+          </button>
+        </div>
+
+        <mat-progress-bar mode="indeterminate" *ngIf="bbvaMastercardLoading"></mat-progress-bar>
+
+        <div class="result" *ngIf="bbvaMastercardResult">
+          <p class="success">✓ {{ bbvaMastercardResult.length }} transacciones importadas correctamente.</p>
+          <mat-list dense>
+            <mat-list-item *ngFor="let tx of bbvaMastercardResult | slice:0:5">
+              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
+            </mat-list-item>
+            <mat-list-item *ngIf="bbvaMastercardResult.length > 5">
+              ... y {{ bbvaMastercardResult.length - 5 }} más
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div class="error-message" *ngIf="bbvaMastercardError">
+          <p>{{ bbvaMastercardError }}</p>
         </div>
       </mat-card-content>
     </mat-card>

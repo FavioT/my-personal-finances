@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Transaction, SummaryResponse, TransactionFilters } from '../models/transaction.model';
+import { CreditCardSummaryResponse } from '../models/credit-card-summary.model';
 
 const API_URL = 'http://localhost:8000';
 
@@ -31,5 +32,9 @@ export class TransactionService {
 
   deleteTransaction(id: number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/transactions/${id}`);
+  }
+
+  getCreditCardSummary(): Observable<CreditCardSummaryResponse> {
+    return this.http.get<CreditCardSummaryResponse>(`${API_URL}/transactions/credit-card-summary`);
   }
 }

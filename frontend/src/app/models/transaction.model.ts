@@ -7,6 +7,8 @@ export interface Transaction {
   category: string | null;
   source: string;
   source_type: 'xls' | 'credit_card_bbva' | 'credit_card_macro';
+  installment_current: number | null;
+  installment_total: number | null;
   created_at: string;
 }
 

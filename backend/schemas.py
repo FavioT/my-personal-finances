@@ -11,6 +11,8 @@ class TransactionBase(BaseModel):
     category: Optional[str] = None
     source: str
     source_type: str
+    installment_current: Optional[int] = None
+    installment_total: Optional[int] = None
 
 
 class TransactionCreate(TransactionBase):
@@ -33,3 +35,30 @@ class SummaryResponse(BaseModel):
 
 class CreditCardTextInput(BaseModel):
     text: str
+
+
+class CreditCardInstallmentItem(BaseModel):
+    transaction_id: int
+    description: str
+    date: date
+    monthly_amount: float
+    installment_current: int
+    installment_total: int
+    pending_installments: int
+    remaining_debt: float
+    total_debt: float
+    payoff_month: str  # "YYYY-MM"
+
+
+class CardSummary(BaseModel):
+    card: str
+    card_network: str
+    total_monthly: float
+    total_remaining_debt: float
+    total_debt: float
+    payoff_month: str
+    items: list[CreditCardInstallmentItem]
+
+
+class CreditCardSummaryResponse(BaseModel):
+    cards: list[CardSummary]

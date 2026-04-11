@@ -1,0 +1,105 @@
+<div class="cc-container">
+  <h1>Tarjetas de Crédito</h1>
+
+  <div *ngIf="loading" class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <mat-card>
+      <mat-card-content>{{ error }}</mat-card-content>
+    </mat-card>
+  </div>
+
+  <div *ngIf="!loading && !error && cards.length === 0" class="empty-state">
+    <mat-card>
+      <mat-card-content>
+        No hay cuotas pendientes. Importá tu resumen de tarjeta de crédito desde la sección
+        <a routerLink="/upload">Subir archivos</a>.
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <ng-container *ngFor="let card of cards">
+    <mat-card class="card-summary">
+      <mat-card-header>
+        <mat-card-title>
+          {{ card.card }}
+          <span class="network-badge">{{ card.card_network }}</span>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Summary row -->
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">Cuota mensual total</span>
+            <span class="value negative">$ {{ card.total_monthly | number:'1.2-2' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Deuda restante</span>
+            <span class="value negative">$ {{ card.total_remaining_debt | number:'1.2-2' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Deuda total</span>
+            <span class="value">$ {{ card.total_debt | number:'1.2-2' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Se salda en</span>
+            <span class="value payoff">{{ formatMonth(card.payoff_month) }}</span>
+          </div>
+        </div>
+
+        <!-- Detail table -->
+        <mat-expansion-panel class="detail-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Ver detalle ({{ card.items.length }} cuotas)</mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <table mat-table [dataSource]="card.items" class="detail-table">
+
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Descripción</th>
+              <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="monthly_amount">
+              <th mat-header-cell *matHeaderCellDef class="right">Cuota</th>
+              <td mat-cell *matCellDef="let row" class="right">$ {{ row.monthly_amount | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="installments">
+              <th mat-header-cell *matHeaderCellDef class="center">Cuotas</th>
+              <td mat-cell *matCellDef="let row" class="center">
+                {{ row.installment_current }} / {{ row.installment_total }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="pending">
+              <th mat-header-cell *matHeaderCellDef class="center">Pendientes</th>
+              <td mat-cell *matCellDef="let row" class="center">{{ row.pending_installments }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="remaining_debt">
+              <th mat-header-cell *matHeaderCellDef class="right">Saldo</th>
+              <td mat-cell *matCellDef="let row" class="right negative">$ {{ row.remaining_debt | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="total_debt">
+              <th mat-header-cell *matHeaderCellDef class="right">Total compra</th>
+              <td mat-cell *matCellDef="let row" class="right">$ {{ row.total_debt | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="payoff_month">
+              <th mat-header-cell *matHeaderCellDef class="center">Se salda</th>
+              <td mat-cell *matCellDef="let row" class="center">{{ formatMonth(row.payoff_month) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </mat-expansion-panel>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

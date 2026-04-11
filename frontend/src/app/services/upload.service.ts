@@ -21,6 +21,14 @@ export class UploadService {
     return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/bbva`, { text });
   }
 
+  uploadBbvaVisaText(text: string): Observable<Transaction[]> {
+    return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/bbva-visa`, { text });
+  }
+
+  uploadBbvaMastercardText(text: string): Observable<Transaction[]> {
+    return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/bbva-mastercard`, { text });
+  }
+
   uploadMacroText(text: string): Observable<Transaction[]> {
     return this.http.post<Transaction[]>(`${API_URL}/upload/credit-card/macro`, { text });
   }

@@ -1,6 +1,7 @@
 import re
 from datetime import date
 from fastapi import HTTPException
+from parsers.pdf_parser import _is_macro_format, _parse_macro_text, _is_bbva_format, _parse_bbva_text
 
 
 # Matches dates like DD/MM/YYYY, DD/MM/YY, DD-MM-YYYY, DD-MM-YY
@@ -45,6 +46,19 @@ def parse_credit_card_text(text: str, bank: str) -> list[dict]:
     """
     if not text or not text.strip():
         raise HTTPException(status_code=400, detail="The submitted text is empty.")
+
+    # Macro format uses Spanish month names instead of numeric dates
+    if bank.lower() == "macro" and _is_macro_format(text):
+        transactions = _parse_macro_text(text, source_name=bank.upper(), source_type="credit_card_macro")
+        if transactions:
+            return transactions
+
+    # BBVA format uses DD-MonthAbbr-YY with 6-digit coupon numbers
+    if bank.lower() in ("bbva", "bbva_visa", "bbva_mastercard") and _is_bbva_format(text):
+        source_type_val = f"credit_card_{bank.lower()}"
+        transactions = _parse_bbva_text(text, source_name=bank.upper(), source_type=source_type_val)
+        if transactions:
+            return transactions
 
     source_type = f"credit_card_{bank.lower()}"
     transactions: list[dict] = []
