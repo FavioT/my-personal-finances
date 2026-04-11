@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '', // empty = same origin (Vercel routes /api/* to the backend)
+  apiUrl: '/api', // Vercel routes /api/* to the Python serverless function
 };
