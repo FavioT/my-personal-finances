@@ -1,4 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+html, body { height: 100%; margin: 0; }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.positive { color: #00ff00; }
+.negative { color: #ff5555; }
+
+/* Leave room for fixed tui-nav (28px) and tui-statusbar (28px) */
+.app-content {
+  padding-top: 28px;
+  padding-bottom: 28px;
+  padding-left: 16px;
+  padding-right: 16px;
+  min-height: calc(100vh - 56px);
+}
+

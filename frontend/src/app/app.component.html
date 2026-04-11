@@ -1,20 +1,20 @@
-<mat-toolbar color="primary">
-  <span>{{ title }}</span>
-  <span class="spacer"></span>
-  <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
-    <mat-icon>dashboard</mat-icon> Dashboard
-  </a>
-  <a mat-button routerLink="/transactions" routerLinkActive="active-link">
-    <mat-icon>list</mat-icon> Transactions
-  </a>
-  <a mat-button routerLink="/upload" routerLinkActive="active-link">
-    <mat-icon>upload</mat-icon> Upload
-  </a>
-  <a mat-button routerLink="/credit-cards" routerLinkActive="active-link">
-    <mat-icon>credit_card</mat-icon> Tarjetas
-  </a>
-</mat-toolbar>
+<nav class="tui-nav">
+  <ul>
+    <li><span class="cyan-255-text"><b>&#9776; Mis Finanzas</b></span></li>
+    <li><a routerLink="/dashboard" routerLinkActive="tui-active">Dashboard</a></li>
+    <li><a routerLink="/transactions" routerLinkActive="tui-active">Transacciones</a></li>
+    <li><a routerLink="/upload" routerLinkActive="tui-active">Subir archivos</a></li>
+    <li><a routerLink="/credit-cards" routerLinkActive="tui-active">Tarjetas</a></li>
+  </ul>
+  <span class="tui-datetime" data-format="h:m:s a"></span>
+</nav>
 
-<main>
+<div class="app-content">
   <router-outlet></router-outlet>
-</main>
+</div>
+
+<div class="tui-statusbar absolute">
+  <ul>
+    <li><span class="white-255-text">Mis Finanzas Personales</span></li>
+  </ul>
+</div>

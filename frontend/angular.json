@@ -29,13 +29,25 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/tuicss/dist/fonts",
+                "output": "fonts"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/tuicss/dist/images",
+                "output": "images"
               }
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/indigo-pink.css",
+              "node_modules/tuicss/dist/tuicss.min.css",
               "src/styles.scss"
             ],
-            "scripts": [],
+            "scripts": [
+              "node_modules/tuicss/dist/tuicss.min.js"
+            ],
             "optimization": {
               "fonts": false
             }

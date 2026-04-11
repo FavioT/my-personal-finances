@@ -1,65 +1,62 @@
-<div class="dashboard-container">
-  <h1>Dashboard</h1>
-
-  <div *ngIf="loading" class="loading">
-    <mat-spinner></mat-spinner>
-  </div>
-
-  <div *ngIf="error" class="error-message">
-    <mat-card>
-      <mat-card-content>{{ error }}</mat-card-content>
-    </mat-card>
-  </div>
-
-  <ng-container *ngIf="!loading && !error">
-    <div class="summary-cards" *ngIf="summary">
-      <mat-card class="summary-card income">
-        <mat-card-header>
-          <mat-card-title>Total Income</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="amount positive">{{ summary.total_income | number:'1.2-2' }}</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card expenses">
-        <mat-card-header>
-          <mat-card-title>Total Expenses</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="amount negative">{{ summary.total_expenses | number:'1.2-2' }}</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card balance">
-        <mat-card-header>
-          <mat-card-title>Balance</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="amount" [class.positive]="summary.balance >= 0" [class.negative]="summary.balance < 0">
-            {{ summary.balance | number:'1.2-2' }}
-          </p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <div class="chart-container" *ngIf="summary && (summary.total_income > 0 || summary.total_expenses < 0)">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Income vs Expenses</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <canvas baseChart [data]="pieChartData" [type]="pieChartType"></canvas>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <div class="empty-state" *ngIf="summary && summary.total_income === 0 && summary.total_expenses === 0">
-      <mat-card>
-        <mat-card-content>
-          <p>No transactions found. <a routerLink="/upload">Upload your first file</a> to get started.</p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </ng-container>
+<div *ngIf="loading" class="tui-window full-width" style="text-align:center;padding:16px">
+  <div class="tui-progress-bar tui-indeterminate"></div>
+  <p>Cargando...</p>
 </div>
+
+<div *ngIf="error" class="tui-window full-width red-168" style="padding:12px">
+  <p class="white-text">{{ error }}</p>
+</div>
+
+<ng-container *ngIf="!loading && !error">
+
+  <!-- Summary cards -->
+  <div *ngIf="summary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Ingresos</legend>
+        <p class="green-255-text" style="font-size:1.4em;margin:4px 0">
+          $ {{ summary.total_income | number:'1.2-2' }}
+        </p>
+      </fieldset>
+    </div>
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Gastos</legend>
+        <p class="red-255-text" style="font-size:1.4em;margin:4px 0">
+          $ {{ summary.total_expenses | number:'1.2-2' }}
+        </p>
+      </fieldset>
+    </div>
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Balance</legend>
+        <p [class.green-255-text]="summary.balance >= 0" [class.red-255-text]="summary.balance < 0"
+           style="font-size:1.4em;margin:4px 0">
+          $ {{ summary.balance | number:'1.2-2' }}
+        </p>
+      </fieldset>
+    </div>
+
+  </div>
+
+  <!-- Chart -->
+  <div *ngIf="summary && (summary.total_income > 0 || summary.total_expenses < 0)"
+       class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">Ingresos vs Gastos</legend>
+      <div style="max-width:340px;margin:0 auto">
+        <canvas baseChart [data]="pieChartData" [type]="pieChartType"></canvas>
+      </div>
+    </fieldset>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="summary && summary.total_income === 0 && summary.total_expenses === 0"
+       class="tui-window full-width" style="padding:16px;text-align:center">
+    <p class="white-text">Sin transacciones. <a routerLink="/upload" class="cyan-255-text">Subí tu primer archivo</a> para comenzar.</p>
+  </div>
+
+</ng-container>

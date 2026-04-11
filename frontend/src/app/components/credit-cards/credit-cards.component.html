@@ -1,105 +1,76 @@
-<div class="cc-container">
-  <h1>Tarjetas de Crédito</h1>
-
-  <div *ngIf="loading" class="loading-center">
-    <mat-spinner diameter="48"></mat-spinner>
-  </div>
-
-  <div *ngIf="error" class="error-message">
-    <mat-card>
-      <mat-card-content>{{ error }}</mat-card-content>
-    </mat-card>
-  </div>
-
-  <div *ngIf="!loading && !error && cards.length === 0" class="empty-state">
-    <mat-card>
-      <mat-card-content>
-        No hay cuotas pendientes. Importá tu resumen de tarjeta de crédito desde la sección
-        <a routerLink="/upload">Subir archivos</a>.
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <ng-container *ngFor="let card of cards">
-    <mat-card class="card-summary">
-      <mat-card-header>
-        <mat-card-title>
-          {{ card.card }}
-          <span class="network-badge">{{ card.card_network }}</span>
-        </mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content>
-        <!-- Summary row -->
-        <div class="summary-grid">
-          <div class="summary-item">
-            <span class="label">Cuota mensual total</span>
-            <span class="value negative">$ {{ card.total_monthly | number:'1.2-2' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Deuda restante</span>
-            <span class="value negative">$ {{ card.total_remaining_debt | number:'1.2-2' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Deuda total</span>
-            <span class="value">$ {{ card.total_debt | number:'1.2-2' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Se salda en</span>
-            <span class="value payoff">{{ formatMonth(card.payoff_month) }}</span>
-          </div>
-        </div>
-
-        <!-- Detail table -->
-        <mat-expansion-panel class="detail-panel">
-          <mat-expansion-panel-header>
-            <mat-panel-title>Ver detalle ({{ card.items.length }} cuotas)</mat-panel-title>
-          </mat-expansion-panel-header>
-
-          <table mat-table [dataSource]="card.items" class="detail-table">
-
-            <ng-container matColumnDef="description">
-              <th mat-header-cell *matHeaderCellDef>Descripción</th>
-              <td mat-cell *matCellDef="let row">{{ row.description }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="monthly_amount">
-              <th mat-header-cell *matHeaderCellDef class="right">Cuota</th>
-              <td mat-cell *matCellDef="let row" class="right">$ {{ row.monthly_amount | number:'1.2-2' }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="installments">
-              <th mat-header-cell *matHeaderCellDef class="center">Cuotas</th>
-              <td mat-cell *matCellDef="let row" class="center">
-                {{ row.installment_current }} / {{ row.installment_total }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="pending">
-              <th mat-header-cell *matHeaderCellDef class="center">Pendientes</th>
-              <td mat-cell *matCellDef="let row" class="center">{{ row.pending_installments }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="remaining_debt">
-              <th mat-header-cell *matHeaderCellDef class="right">Saldo</th>
-              <td mat-cell *matCellDef="let row" class="right negative">$ {{ row.remaining_debt | number:'1.2-2' }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="total_debt">
-              <th mat-header-cell *matHeaderCellDef class="right">Total compra</th>
-              <td mat-cell *matCellDef="let row" class="right">$ {{ row.total_debt | number:'1.2-2' }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="payoff_month">
-              <th mat-header-cell *matHeaderCellDef class="center">Se salda</th>
-              <td mat-cell *matCellDef="let row" class="center">{{ formatMonth(row.payoff_month) }}</td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-        </mat-expansion-panel>
-      </mat-card-content>
-    </mat-card>
-  </ng-container>
+<!-- Loading -->
+<div *ngIf="loading" class="tui-window full-width" style="padding:12px;margin-bottom:16px">
+  <div class="tui-progress-bar tui-indeterminate"></div>
 </div>
+
+<!-- Error -->
+<div *ngIf="error" class="tui-window full-width" style="padding:12px;margin-bottom:16px;border-color:#ff5555">
+  <p class="red-255-text">{{ error }}</p>
+</div>
+
+<!-- Empty state -->
+<div *ngIf="!loading && !error && cards.length === 0" class="tui-window full-width" style="padding:16px;margin-bottom:16px">
+  <p class="white-text">No hay cuotas pendientes. Importá tu resumen de tarjeta de crédito desde
+    <a routerLink="/upload" class="cyan-255-text">Subir archivos</a>.
+  </p>
+</div>
+
+<!-- Card list -->
+<ng-container *ngFor="let card of cards">
+  <div class="tui-window full-width" style="padding:12px;margin-bottom:20px">
+    <fieldset class="tui-fieldset">
+      <legend class="cyan-255-text"><b>{{ card.card }}</b>&nbsp;&mdash;&nbsp;{{ card.card_network }}</legend>
+
+      <!-- Summary grid -->
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px">
+        <div>
+          <div class="white-255-text" style="font-size:0.75em">Cuota mensual</div>
+          <div class="red-255-text"><b>$ {{ card.total_monthly | number:'1.2-2' }}</b></div>
+        </div>
+        <div>
+          <div class="white-255-text" style="font-size:0.75em">Deuda restante</div>
+          <div class="red-255-text"><b>$ {{ card.total_remaining_debt | number:'1.2-2' }}</b></div>
+        </div>
+        <div>
+          <div class="white-255-text" style="font-size:0.75em">Deuda total</div>
+          <div class="white-text"><b>$ {{ card.total_debt | number:'1.2-2' }}</b></div>
+        </div>
+        <div>
+          <div class="white-255-text" style="font-size:0.75em">Se salda en</div>
+          <div class="cyan-255-text"><b>{{ formatMonth(card.payoff_month) }}</b></div>
+        </div>
+      </div>
+
+      <!-- Detail expandable -->
+      <details>
+        <summary class="white-text" style="cursor:pointer;margin-bottom:8px">
+          Ver detalle ({{ card.items.length }} cuotas)
+        </summary>
+        <table class="tui-table hovered-cyan" style="width:100%">
+          <thead>
+            <tr>
+              <th class="white-255-text">Descripción</th>
+              <th class="white-255-text" style="text-align:right">Cuota</th>
+              <th class="white-255-text" style="text-align:center">Cuotas</th>
+              <th class="white-255-text" style="text-align:center">Pend.</th>
+              <th class="white-255-text" style="text-align:right">Saldo</th>
+              <th class="white-255-text" style="text-align:right">Total</th>
+              <th class="white-255-text" style="text-align:center">Se salda</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of card.items">
+              <td class="white-text">{{ row.description }}</td>
+              <td class="white-text" style="text-align:right">$ {{ row.monthly_amount | number:'1.2-2' }}</td>
+              <td class="white-text" style="text-align:center">{{ row.installment_current }} / {{ row.installment_total }}</td>
+              <td class="white-text" style="text-align:center">{{ row.pending_installments }}</td>
+              <td class="red-255-text" style="text-align:right">$ {{ row.remaining_debt | number:'1.2-2' }}</td>
+              <td class="white-text" style="text-align:right">$ {{ row.total_debt | number:'1.2-2' }}</td>
+              <td class="cyan-255-text" style="text-align:center">{{ formatMonth(row.payoff_month) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+    </fieldset>
+  </div>
+</ng-container>

@@ -1,198 +1,104 @@
-<div class="upload-container">
-  <h1>Upload Files</h1>
+<div style="display:flex;flex-direction:column;gap:16px">
 
-  <div class="upload-cards">
-    <!-- XLS Upload -->
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>table_chart</mat-icon> Bank Account (XLS / XLSX)
-        </mat-card-title>
-        <mat-card-subtitle>Upload your bank account statement</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="upload-area">
-          <button mat-raised-button color="primary" (click)="xlsInput.click()" [disabled]="xlsLoading">
-            <mat-icon>upload_file</mat-icon>
-            Select XLS/XLSX File
-          </button>
-          <input #xlsInput type="file" accept=".xls,.xlsx" hidden (change)="onXlsFileSelected($event)" />
-        </div>
-
-        <mat-progress-bar mode="indeterminate" *ngIf="xlsLoading"></mat-progress-bar>
-
-        <div class="result" *ngIf="xlsResult">
-          <p class="success">✓ {{ xlsResult.length }} transactions imported successfully.</p>
-          <mat-list dense>
-            <mat-list-item *ngFor="let tx of xlsResult | slice:0:5">
-              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
-            </mat-list-item>
-            <mat-list-item *ngIf="xlsResult.length > 5">
-              ... and {{ xlsResult.length - 5 }} more
-            </mat-list-item>
-          </mat-list>
-        </div>
-
-        <div class="error-message" *ngIf="xlsError">
-          <p>{{ xlsError }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- BBVA VISA Credit Card -->
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>credit_card</mat-icon> BBVA VISA
-        </mat-card-title>
-        <mat-card-subtitle>Pegá el texto del resumen BBVA VISA</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field class="statement-field" appearance="outline">
-          <mat-label>Texto resumen BBVA VISA</mat-label>
-          <textarea
-            matInput
-            [(ngModel)]="bbvaVisaText"
-            rows="8"
-            placeholder="Pegá aquí el texto del resumen BBVA VISA..."
-            [disabled]="bbvaVisaLoading"
-          ></textarea>
-        </mat-form-field>
-
-        <div class="upload-area">
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="onBbvaVisaSubmit()"
-            [disabled]="bbvaVisaLoading || !bbvaVisaText.trim()"
-          >
-            <mat-icon>send</mat-icon>
-            Importar BBVA VISA
-          </button>
-        </div>
-
-        <mat-progress-bar mode="indeterminate" *ngIf="bbvaVisaLoading"></mat-progress-bar>
-
-        <div class="result" *ngIf="bbvaVisaResult">
-          <p class="success">✓ {{ bbvaVisaResult.length }} transacciones importadas correctamente.</p>
-          <mat-list dense>
-            <mat-list-item *ngFor="let tx of bbvaVisaResult | slice:0:5">
-              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
-            </mat-list-item>
-            <mat-list-item *ngIf="bbvaVisaResult.length > 5">
-              ... y {{ bbvaVisaResult.length - 5 }} más
-            </mat-list-item>
-          </mat-list>
-        </div>
-
-        <div class="error-message" *ngIf="bbvaVisaError">
-          <p>{{ bbvaVisaError }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- BBVA Mastercard Credit Card -->
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>credit_card</mat-icon> BBVA Mastercard
-        </mat-card-title>
-        <mat-card-subtitle>Pegá el texto del resumen BBVA Mastercard</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field class="statement-field" appearance="outline">
-          <mat-label>Texto resumen BBVA Mastercard</mat-label>
-          <textarea
-            matInput
-            [(ngModel)]="bbvaMastercardText"
-            rows="8"
-            placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."
-            [disabled]="bbvaMastercardLoading"
-          ></textarea>
-        </mat-form-field>
-
-        <div class="upload-area">
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="onBbvaMastercardSubmit()"
-            [disabled]="bbvaMastercardLoading || !bbvaMastercardText.trim()"
-          >
-            <mat-icon>send</mat-icon>
-            Importar BBVA Mastercard
-          </button>
-        </div>
-
-        <mat-progress-bar mode="indeterminate" *ngIf="bbvaMastercardLoading"></mat-progress-bar>
-
-        <div class="result" *ngIf="bbvaMastercardResult">
-          <p class="success">✓ {{ bbvaMastercardResult.length }} transacciones importadas correctamente.</p>
-          <mat-list dense>
-            <mat-list-item *ngFor="let tx of bbvaMastercardResult | slice:0:5">
-              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
-            </mat-list-item>
-            <mat-list-item *ngIf="bbvaMastercardResult.length > 5">
-              ... y {{ bbvaMastercardResult.length - 5 }} más
-            </mat-list-item>
-          </mat-list>
-        </div>
-
-        <div class="error-message" *ngIf="bbvaMastercardError">
-          <p>{{ bbvaMastercardError }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Macro Credit Card -->
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>credit_card</mat-icon> Macro Credit Card Statement
-        </mat-card-title>
-        <mat-card-subtitle>Paste your Macro credit card statement text below</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field class="statement-field" appearance="outline">
-          <mat-label>Macro statement text</mat-label>
-          <textarea
-            matInput
-            [(ngModel)]="macroText"
-            rows="8"
-            placeholder="Paste the text from your Macro credit card statement here..."
-            [disabled]="macroLoading"
-          ></textarea>
-        </mat-form-field>
-
-        <div class="upload-area">
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="onMacroSubmit()"
-            [disabled]="macroLoading || !macroText.trim()"
-          >
-            <mat-icon>send</mat-icon>
-            Import Macro Transactions
-          </button>
-        </div>
-
-        <mat-progress-bar mode="indeterminate" *ngIf="macroLoading"></mat-progress-bar>
-
-        <div class="result" *ngIf="macroResult">
-          <p class="success">✓ {{ macroResult.length }} transactions imported successfully.</p>
-          <mat-list dense>
-            <mat-list-item *ngFor="let tx of macroResult | slice:0:5">
-              {{ tx.date }} — {{ tx.description }} — {{ tx.amount | number:'1.2-2' }}
-            </mat-list-item>
-            <mat-list-item *ngIf="macroResult.length > 5">
-              ... and {{ macroResult.length - 5 }} more
-            </mat-list-item>
-          </mat-list>
-        </div>
-
-        <div class="error-message" *ngIf="macroError">
-          <p>{{ macroError }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
+  <!-- XLS -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128196; Caja de ahorro (XLS / XLSX)</legend>
+      <p class="white-text" style="margin:4px 0 10px">Subí tu extracto bancario</p>
+      <button class="tui-button cyan-168 white-text" (click)="xlsInput.click()" [disabled]="xlsLoading">
+        Seleccionar archivo XLS/XLSX
+      </button>
+      <input #xlsInput type="file" accept=".xls,.xlsx" hidden (change)="onXlsFileSelected($event)" />
+      <div *ngIf="xlsLoading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px"></div>
+      <div *ngIf="xlsResult" style="margin-top:8px">
+        <p class="green-255-text">&#10003; {{ xlsResult.length }} transacciones importadas.</p>
+        <ul style="list-style:none;padding:0;margin:0">
+          <li *ngFor="let tx of xlsResult | slice:0:5" class="white-text" style="font-size:12px">
+            {{ tx.date }} &mdash; {{ tx.description }} &mdash; {{ tx.amount | number:'1.2-2' }}
+          </li>
+          <li *ngIf="xlsResult.length > 5" class="white-text" style="font-size:12px">... y {{ xlsResult.length - 5 }} más</li>
+        </ul>
+      </div>
+      <p *ngIf="xlsError" class="red-255-text" style="margin-top:8px">{{ xlsError }}</p>
+    </fieldset>
   </div>
+
+  <!-- BBVA VISA -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; BBVA VISA</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA VISA</p>
+      <textarea
+        class="tui-input"
+        [(ngModel)]="bbvaVisaText"
+        rows="7"
+        style="width:100%;box-sizing:border-box;resize:vertical"
+        placeholder="Pegá aquí el texto del resumen BBVA VISA..."
+        [disabled]="bbvaVisaLoading"
+      ></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button cyan-168 white-text" (click)="onBbvaVisaSubmit()" [disabled]="bbvaVisaLoading || !bbvaVisaText.trim()">
+          Importar BBVA VISA
+        </button>
+      </div>
+      <div *ngIf="bbvaVisaLoading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px"></div>
+      <div *ngIf="bbvaVisaResult" style="margin-top:8px">
+        <p class="green-255-text">&#10003; {{ bbvaVisaResult.length }} transacciones importadas.</p>
+      </div>
+      <p *ngIf="bbvaVisaError" class="red-255-text" style="margin-top:8px">{{ bbvaVisaError }}</p>
+    </fieldset>
+  </div>
+
+  <!-- BBVA Mastercard -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; BBVA Mastercard</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA Mastercard</p>
+      <textarea
+        class="tui-input"
+        [(ngModel)]="bbvaMastercardText"
+        rows="7"
+        style="width:100%;box-sizing:border-box;resize:vertical"
+        placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."
+        [disabled]="bbvaMastercardLoading"
+      ></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button yellow-168 black-text" (click)="onBbvaMastercardSubmit()" [disabled]="bbvaMastercardLoading || !bbvaMastercardText.trim()">
+          Importar BBVA Mastercard
+        </button>
+      </div>
+      <div *ngIf="bbvaMastercardLoading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px"></div>
+      <div *ngIf="bbvaMastercardResult" style="margin-top:8px">
+        <p class="green-255-text">&#10003; {{ bbvaMastercardResult.length }} transacciones importadas.</p>
+      </div>
+      <p *ngIf="bbvaMastercardError" class="red-255-text" style="margin-top:8px">{{ bbvaMastercardError }}</p>
+    </fieldset>
+  </div>
+
+  <!-- Macro -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; Macro Mastercard</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen Macro</p>
+      <textarea
+        class="tui-input"
+        [(ngModel)]="macroText"
+        rows="7"
+        style="width:100%;box-sizing:border-box;resize:vertical"
+        placeholder="Pegá aquí el texto del resumen Macro..."
+        [disabled]="macroLoading"
+      ></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button yellow-168 black-text" (click)="onMacroSubmit()" [disabled]="macroLoading || !macroText.trim()">
+          Importar Macro
+        </button>
+      </div>
+      <div *ngIf="macroLoading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px"></div>
+      <div *ngIf="macroResult" style="margin-top:8px">
+        <p class="green-255-text">&#10003; {{ macroResult.length }} transacciones importadas.</p>
+      </div>
+      <p *ngIf="macroError" class="red-255-text" style="margin-top:8px">{{ macroError }}</p>
+    </fieldset>
+  </div>
+
 </div>

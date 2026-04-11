@@ -1,32 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatListModule } from '@angular/material/list';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { UploadService } from '../../services/upload.service';
 import { Transaction } from '../../models/transaction.model';
 
 @Component({
   selector: 'app-upload',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatProgressBarModule,
-    MatIconModule,
-    MatSnackBarModule,
-    MatListModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './upload.component.html',
   styleUrls: ['./upload.component.scss'],
 })
@@ -55,7 +36,7 @@ export class UploadComponent {
   macroResult: Transaction[] | null = null;
   macroError: string | null = null;
 
-  constructor(private uploadService: UploadService, private snackBar: MatSnackBar) {}
+  constructor(private uploadService: UploadService) {}
 
   onXlsFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -70,10 +51,9 @@ export class UploadComponent {
       next: (transactions) => {
         this.xlsResult = transactions;
         this.xlsLoading = false;
-        this.snackBar.open(`${transactions.length} transactions imported from XLS`, 'Close', { duration: 4000 });
       },
       error: (err) => {
-        this.xlsError = err.error?.detail ?? 'Error uploading file.';
+        this.xlsError = err.error?.detail ?? 'Error al subir el archivo.';
         this.xlsLoading = false;
       },
     });
@@ -91,7 +71,6 @@ export class UploadComponent {
         this.bbvaResult = transactions;
         this.bbvaLoading = false;
         this.bbvaText = '';
-        this.snackBar.open(`${transactions.length} transactions imported from BBVA`, 'Close', { duration: 4000 });
       },
       error: (err) => {
         this.bbvaError = err.error?.detail ?? 'Error processing BBVA statement.';
@@ -112,10 +91,9 @@ export class UploadComponent {
         this.bbvaVisaResult = transactions;
         this.bbvaVisaLoading = false;
         this.bbvaVisaText = '';
-        this.snackBar.open(`${transactions.length} transactions imported from BBVA VISA`, 'Close', { duration: 4000 });
       },
       error: (err) => {
-        this.bbvaVisaError = err.error?.detail ?? 'Error processing BBVA VISA statement.';
+        this.bbvaVisaError = err.error?.detail ?? 'Error al procesar el resumen BBVA VISA.';
         this.bbvaVisaLoading = false;
       },
     });
@@ -133,10 +111,9 @@ export class UploadComponent {
         this.bbvaMastercardResult = transactions;
         this.bbvaMastercardLoading = false;
         this.bbvaMastercardText = '';
-        this.snackBar.open(`${transactions.length} transactions imported from BBVA Mastercard`, 'Close', { duration: 4000 });
       },
       error: (err) => {
-        this.bbvaMastercardError = err.error?.detail ?? 'Error processing BBVA Mastercard statement.';
+        this.bbvaMastercardError = err.error?.detail ?? 'Error al procesar el resumen BBVA Mastercard.';
         this.bbvaMastercardLoading = false;
       },
     });
@@ -154,10 +131,9 @@ export class UploadComponent {
         this.macroResult = transactions;
         this.macroLoading = false;
         this.macroText = '';
-        this.snackBar.open(`${transactions.length} transactions imported from Macro`, 'Close', { duration: 4000 });
       },
       error: (err) => {
-        this.macroError = err.error?.detail ?? 'Error processing Macro statement.';
+        this.macroError = err.error?.detail ?? 'Error al procesar el resumen Macro.';
         this.macroLoading = false;
       },
     });
