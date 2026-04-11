@@ -29,3 +29,7 @@ class SummaryResponse(BaseModel):
     total_income: float
     total_expenses: float
     balance: float
+
+
+class CreditCardTextInput(BaseModel):
+    text: str
