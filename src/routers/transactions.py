@@ -49,6 +49,51 @@ def monthly_summary():
     })
 
 
+@bp.get('/breakdown-summary')
+def breakdown_summary():
+    db   = g.db
+    year = request.args.get('year', date.today().year, type=int)
+
+    txs = db.query(Transaction).filter(
+        Transaction.date >= date(year, 1, 1),
+        Transaction.date <= date(year, 12, 31),
+        Transaction.amount < 0,
+    ).all()
+
+    by_source:      dict[str, dict[str, float]] = {}
+    source_totals:  dict[str, float]            = {}
+    by_category:    dict[str, dict[str, float]] = {}
+    category_totals: dict[str, float]           = {}
+    monthly_totals: dict[str, float]            = {}
+
+    for tx in txs:
+        ym  = tx.date.strftime('%Y-%m')
+        amt = abs(tx.amount)
+        src = tx.source_type
+        cat = tx.category or 'Sin categoría'
+
+        if src not in by_source:
+            by_source[src] = {}
+        by_source[src][ym]   = round(by_source[src].get(ym, 0) + amt, 2)
+        source_totals[src]   = round(source_totals.get(src, 0)  + amt, 2)
+
+        if cat not in by_category:
+            by_category[cat] = {}
+        by_category[cat][ym]  = round(by_category[cat].get(ym, 0) + amt, 2)
+        category_totals[cat]  = round(category_totals.get(cat, 0) + amt, 2)
+
+        monthly_totals[ym] = round(monthly_totals.get(ym, 0) + amt, 2)
+
+    return jsonify({
+        'year':            year,
+        'by_source':       by_source,
+        'source_totals':   source_totals,
+        'by_category':     by_category,
+        'category_totals': category_totals,
+        'monthly_totals':  monthly_totals,
+    })
+
+
 @bp.get('')
 def get_transactions():
     db = g.db

@@ -59,7 +59,33 @@
   <button class="btn btn-sm btn-ghost btn-square" onclick="changeYear(1)">&#9654;</button>
 </div>
 
-<div id="summary-cards" class="stats stats-horizontal shadow flex-wrap mb-4 bg-base-200" style="display:none"></div>
+<!-- Cards principales YTD -->
+<div id="summary-cards" class="stats stats-horizontal shadow flex-wrap mb-3 bg-base-200" style="display:none"></div>
+
+<!-- Cards estadísticas adicionales -->
+<div id="summary-cards-2" class="stats stats-horizontal shadow flex-wrap mb-4 bg-base-200" style="display:none"></div>
+
+<!-- Sección de gráficos -->
+<div id="charts-section" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4" style="display:none">
+  <div class="card bg-base-200 shadow">
+    <div class="card-body p-4">
+      <h3 class="card-title text-sm text-primary mb-1">Distribución de Gastos por Tipo</h3>
+      <p class="text-xs text-base-content/40 mb-2">Acumulado anual</p>
+      <div style="position:relative; height:250px">
+        <canvas id="chart-donut"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="card bg-base-200 shadow">
+    <div class="card-body p-4">
+      <h3 class="card-title text-sm text-primary mb-1">Evolución Mensual por Tipo de Gasto</h3>
+      <p class="text-xs text-base-content/40 mb-2">Barras apiladas por fuente</p>
+      <div style="position:relative; height:250px">
+        <canvas id="chart-bar"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="loading" class="flex items-center gap-3 p-6 text-base-content/60">
   <span class="loading loading-spinner loading-md text-primary"></span>
@@ -78,10 +104,35 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
   const MONTH_NAMES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-  let currentYear = new Date().getFullYear();
+  let currentYear   = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
+
+  let chartDonut = null;
+  let chartBar   = null;
+
+  const SOURCE_LABELS = {
+    'credit_card_bbva':           'BBVA Visa',
+    'credit_card_bbva_visa':      'BBVA Visa',
+    'credit_card_bbva_mastercard':'BBVA Mastercard',
+    'credit_card_macro':          'Macro',
+    'xls':                        'Banco (XLS)',
+    'pdf':                        'Banco (PDF)',
+  };
+
+  const PALETTE = [
+    'rgba(0, 181, 255, 0.85)',
+    'rgba(255, 190, 0, 0.85)',
+    'rgba(0, 230, 118, 0.85)',
+    'rgba(255, 85, 85, 0.85)',
+    'rgba(166, 255, 0, 0.85)',
+    'rgba(140, 80, 255, 0.85)',
+    'rgba(255, 130, 0, 0.85)',
+  ];
+  const CHART_TEXT = '#9ab8c4';
+  const CHART_GRID = 'rgba(255,255,255,0.05)';
 
   function changeYear(delta) { currentYear += delta; load(); }
 
@@ -130,87 +181,305 @@
     return `<tr class="row-section"><td colspan="13" class="col-label">▸ ${label}</td></tr>`;
   }
 
+  /* ── Gráficos ─────────────────────────────────────────────── */
+  function renderCharts(breakdown, months) {
+    if (chartDonut) { chartDonut.destroy(); chartDonut = null; }
+    if (chartBar)   { chartBar.destroy();   chartBar   = null; }
+
+    /* Agrupar por etiqueta (merge credit_card_bbva + credit_card_bbva_visa → "BBVA Visa") */
+    const labelTotals  = {};
+    const labelMonthly = {};
+
+    Object.entries(breakdown.source_totals).forEach(([src, total]) => {
+      const lbl = SOURCE_LABELS[src] || src;
+      labelTotals[lbl] = (labelTotals[lbl] || 0) + total;
+    });
+
+    months.forEach(ym => {
+      Object.entries(breakdown.by_source).forEach(([src, data]) => {
+        const lbl = SOURCE_LABELS[src] || src;
+        if (!labelMonthly[lbl]) labelMonthly[lbl] = {};
+        labelMonthly[lbl][ym] = (labelMonthly[lbl][ym] || 0) + (data[ym] || 0);
+      });
+    });
+
+    const labels = Object.keys(labelTotals).sort((a, b) => labelTotals[b] - labelTotals[a]);
+    if (!labels.length) {
+      document.getElementById('charts-section').style.display = 'none';
+      return;
+    }
+
+    const grandTotal = labels.reduce((s, l) => s + labelTotals[l], 0);
+
+    /* Dona */
+    chartDonut = new Chart(document.getElementById('chart-donut'), {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: labels.map(l => Math.round(labelTotals[l])),
+          backgroundColor: PALETTE.slice(0, labels.length),
+          borderWidth: 1,
+          borderColor: 'rgba(0,0,0,0.35)',
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: CHART_TEXT, font: { size: 11 }, padding: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const pct = grandTotal ? Math.round(ctx.raw / grandTotal * 100) : 0;
+                return ` ${ctx.label}: ${formatARS(ctx.raw)}  (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    /* Barras apiladas */
+    chartBar = new Chart(document.getElementById('chart-bar'), {
+      type: 'bar',
+      data: {
+        labels: MONTH_NAMES,
+        datasets: labels.map((lbl, i) => ({
+          label: lbl,
+          data: months.map(ym => Math.round(labelMonthly[lbl]?.[ym] || 0)),
+          backgroundColor: PALETTE[i % PALETTE.length],
+          borderWidth: 0,
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: CHART_TEXT, font: { size: 10 } },
+            grid:  { color: CHART_GRID }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              color: CHART_TEXT,
+              font: { size: 10 },
+              callback: v => v >= 1000 ? '$ ' + (v / 1000).toFixed(0) + 'k' : '$ ' + v
+            },
+            grid: { color: CHART_GRID }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: CHART_TEXT, font: { size: 11 }, padding: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${formatARS(ctx.raw)}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Carga principal ──────────────────────────────────────── */
   function load() {
     document.getElementById('year-label').textContent = currentYear;
-    document.getElementById('loading').style.display = '';
-    document.getElementById('dashboard-wrap').style.display = 'none';
-    document.getElementById('summary-cards').style.display = 'none';
-    document.getElementById('error').style.display = 'none';
+    document.getElementById('loading').style.display          = '';
+    document.getElementById('dashboard-wrap').style.display   = 'none';
+    document.getElementById('summary-cards').style.display    = 'none';
+    document.getElementById('summary-cards-2').style.display  = 'none';
+    document.getElementById('charts-section').style.display   = 'none';
+    document.getElementById('error').style.display            = 'none';
 
-    fetch('/api/transactions/monthly-summary?year=' + currentYear)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('loading').style.display = 'none';
+    Promise.all([
+      fetch('/api/transactions/monthly-summary?year='    + currentYear).then(r => r.json()),
+      fetch('/api/transactions/breakdown-summary?year='  + currentYear).then(r => r.json()),
+    ])
+    .then(([data, breakdown]) => {
+      document.getElementById('loading').style.display = 'none';
 
-        const months = Array.from({length: 12}, (_, i) =>
-          `${currentYear}-${String(i + 1).padStart(2, '0')}`
-        );
-        const shortYear = String(currentYear).slice(2);
+      const months    = Array.from({length: 12}, (_, i) =>
+        `${currentYear}-${String(i + 1).padStart(2, '0')}`
+      );
+      const shortYear = String(currentYear).slice(2);
 
-        // ── Row values ────────────────────────────────────
-        const incomeVals      = months.map(ym => val(data.income, ym));
-        const expensesVals    = months.map(ym => { const v = val(data.expenses, ym); return v ? -v : null; });
-        const creditVals      = months.map(ym => val(data.credit_card, ym));
-        const otherVals       = months.map(ym => val(data.other_expenses, ym));
-        const totalGastosVals = months.map((_, i) => {
-          const c = creditVals[i], o = otherVals[i];
-          return (c === null && o === null) ? null : (c || 0) + (o || 0);
-        });
-        const netoVals = months.map((_, i) => {
-          const inc = incomeVals[i], exp = expensesVals[i];
-          return (inc === null && exp === null) ? null : (inc || 0) + (exp || 0);
-        });
-
-        // ── Summary cards (YTD) ───────────────────────────
-        const ytdIncome = sumNonNull(incomeVals);
-        const ytdGastos = sumNonNull(totalGastosVals);
-        const ytdNeto   = (ytdIncome !== null || ytdGastos !== null)
-          ? (ytdIncome || 0) - (ytdGastos || 0) : null;
-
-        const cards = [
-          { label: 'Ingresos ' + currentYear,  v: fmt(ytdIncome) },
-          { label: 'Gastos ' + currentYear,     v: ytdGastos ? { text: '(' + formatARS(ytdGastos) + ')', cls: 'c-neg' } : { text: '$ 0', cls: 'c-zero' } },
-          { label: 'Resultado ' + currentYear,  v: fmt(ytdNeto) },
-        ];
-        const cardsEl = document.getElementById('summary-cards');
-        cardsEl.innerHTML = cards.map(c =>
-          `<div class="stat"><div class="stat-title text-xs">${c.label}</div><div class="stat-value text-lg ${c.v.cls}">${c.v.text}</div></div>`
-        ).join('');
-        cardsEl.style.display = '';
-
-        // ── Header ────────────────────────────────────────
-        let head = `<tr><th class="col-label"></th>`;
-        months.forEach((_, i) => {
-          const isCur = currentYear === new Date().getFullYear() && i + 1 === currentMonth;
-          head += `<th class="col-num ${isCur ? 'cur-month' : ''}">${MONTH_NAMES[i]} '${shortYear}</th>`;
-        });
-        head += '</tr>';
-        document.getElementById('t-head').innerHTML = head;
-
-        // ── Body ──────────────────────────────────────────
-        let body = '';
-
-        body += buildSection('RESUMEN PRESUPUESTO');
-        body += buildRow('Ingresos Totales', incomeVals,   fmt);
-        body += buildRow('Gastos Totales',   expensesVals, fmt);
-        body += buildRow('Resultado Neto',   netoVals,     fmt, { isTotalRow: true });
-
-        body += buildSection('INGRESOS');
-        body += buildRow('Total Ingresos', incomeVals, fmt, { isTotalRow: true });
-
-        body += buildSection('RESUMEN DE GASTOS');
-        body += buildRow('Tarjeta de Crédito',  creditVals,       fmtNeg, { isSubRow: true });
-        body += buildRow('Otros Gastos (banco)', otherVals,        fmtNeg, { isSubRow: true });
-        body += buildRow('Total Gastos',         totalGastosVals,  fmtNeg, { isTotalRow: true });
-
-        document.getElementById('t-body').innerHTML = body;
-        document.getElementById('dashboard-wrap').style.display = '';
-      })
-      .catch(() => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
-        document.getElementById('error').style.display = '';
+      /* ── Valores de filas ─────────────────────────────── */
+      const incomeVals      = months.map(ym => val(data.income, ym));
+      const expensesVals    = months.map(ym => { const v = val(data.expenses, ym); return v ? -v : null; });
+      const creditVals      = months.map(ym => val(data.credit_card, ym));
+      const otherVals       = months.map(ym => val(data.other_expenses, ym));
+      const totalGastosVals = months.map((_, i) => {
+        const c = creditVals[i], o = otherVals[i];
+        return (c === null && o === null) ? null : (c || 0) + (o || 0);
       });
+      const netoVals = months.map((_, i) => {
+        const inc = incomeVals[i], exp = expensesVals[i];
+        return (inc === null && exp === null) ? null : (inc || 0) + (exp || 0);
+      });
+
+      /* ── Cards 1: YTD ─────────────────────────────────── */
+      const ytdIncome = sumNonNull(incomeVals);
+      const ytdGastos = sumNonNull(totalGastosVals);
+      const ytdNeto   = (ytdIncome !== null || ytdGastos !== null)
+        ? (ytdIncome || 0) - (ytdGastos || 0) : null;
+
+      const cards = [
+        { label: 'Ingresos ' + currentYear,  v: fmt(ytdIncome) },
+        { label: 'Gastos '   + currentYear,  v: ytdGastos
+            ? { text: '(' + formatARS(ytdGastos) + ')', cls: 'c-neg' }
+            : { text: '$ 0', cls: 'c-zero' } },
+        { label: 'Resultado ' + currentYear, v: fmt(ytdNeto) },
+      ];
+      const cardsEl = document.getElementById('summary-cards');
+      cardsEl.innerHTML = cards.map(c =>
+        `<div class="stat">
+           <div class="stat-title text-xs">${c.label}</div>
+           <div class="stat-value text-lg ${c.v.cls}">${c.v.text}</div>
+         </div>`
+      ).join('');
+      cardsEl.style.display = '';
+
+      /* ── Cards 2: estadísticas adicionales ───────────── */
+      const monthsWithGasto = totalGastosVals.filter(v => v !== null && v > 0);
+      const avgMonthly = monthsWithGasto.length
+        ? Math.round(monthsWithGasto.reduce((a, b) => a + b, 0) / monthsWithGasto.length)
+        : null;
+
+      let maxExpMonth = null, maxExpVal = 0;
+      totalGastosVals.forEach((v, i) => {
+        if (v !== null && v > maxExpVal) { maxExpVal = v; maxExpMonth = MONTH_NAMES[i]; }
+      });
+
+      const creditTotal  = sumNonNull(creditVals);
+      const creditPct    = ytdGastos && creditTotal
+        ? Math.round(creditTotal / ytdGastos * 100) : null;
+
+      const savingsRate  = ytdIncome && ytdIncome > 0
+        ? Math.round((ytdNeto || 0) / ytdIncome * 100) : null;
+
+      const topSrcEntry  = Object.entries(breakdown.source_totals)
+        .sort((a, b) => b[1] - a[1])[0];
+      const topSource    = topSrcEntry ? (SOURCE_LABELS[topSrcEntry[0]] || topSrcEntry[0]) : null;
+
+      const cards2 = [
+        {
+          label: 'Prom. mensual de gastos',
+          v:     avgMonthly
+            ? { text: '(' + formatARS(avgMonthly) + ')', cls: 'c-neg' }
+            : { text: '—', cls: 'c-empty' },
+          desc: monthsWithGasto.length
+            ? `sobre ${monthsWithGasto.length} mes${monthsWithGasto.length > 1 ? 'es' : ''}` : '',
+        },
+        {
+          label: 'Mes con mayor gasto',
+          v:     maxExpMonth
+            ? { text: maxExpMonth, cls: 'text-warning' }
+            : { text: '—', cls: 'c-empty' },
+          desc: maxExpVal ? formatARS(maxExpVal) : '',
+        },
+        {
+          label: 'Tasa de ahorro',
+          v:     savingsRate !== null
+            ? { text: savingsRate + '%', cls: savingsRate >= 0 ? 'c-pos' : 'c-neg' }
+            : { text: '—', cls: 'c-empty' },
+          desc: savingsRate !== null
+            ? (savingsRate >= 0 ? 'del ingreso ahorrado' : 'déficit sobre ingresos') : '',
+        },
+        {
+          label: '% gastos en tarjeta',
+          v:     creditPct !== null
+            ? { text: creditPct + '%', cls: 'text-primary' }
+            : { text: '—', cls: 'c-empty' },
+          desc: creditTotal ? formatARS(creditTotal) : '',
+        },
+        {
+          label: 'Principal fuente de gasto',
+          v:     topSource
+            ? { text: topSource, cls: 'text-primary' }
+            : { text: '—', cls: 'c-empty' },
+          desc: topSrcEntry ? formatARS(topSrcEntry[1]) : '',
+        },
+      ];
+
+      const cards2El = document.getElementById('summary-cards-2');
+      cards2El.innerHTML = cards2.map(c =>
+        `<div class="stat">
+           <div class="stat-title text-xs">${c.label}</div>
+           <div class="stat-value text-base ${c.v.cls}">${c.v.text}</div>
+           ${c.desc ? `<div class="stat-desc text-xs opacity-50">${c.desc}</div>` : ''}
+         </div>`
+      ).join('');
+      cards2El.style.display = '';
+
+      /* ── Gráficos ─────────────────────────────────────── */
+      renderCharts(breakdown, months);
+      document.getElementById('charts-section').style.display = '';
+
+      /* ── Encabezado de tabla ──────────────────────────── */
+      let head = `<tr><th class="col-label"></th>`;
+      months.forEach((_, i) => {
+        const isCur = currentYear === new Date().getFullYear() && i + 1 === currentMonth;
+        head += `<th class="col-num ${isCur ? 'cur-month' : ''}">${MONTH_NAMES[i]} '${shortYear}</th>`;
+      });
+      head += '</tr>';
+      document.getElementById('t-head').innerHTML = head;
+
+      /* ── Cuerpo de tabla ──────────────────────────────── */
+      let body = '';
+
+      body += buildSection('RESUMEN PRESUPUESTO');
+      body += buildRow('Ingresos Totales', incomeVals,   fmt);
+      body += buildRow('Gastos Totales',   expensesVals, fmt);
+      body += buildRow('Resultado Neto',   netoVals,     fmt, { isTotalRow: true });
+
+      body += buildSection('INGRESOS');
+      body += buildRow('Total Ingresos', incomeVals, fmt, { isTotalRow: true });
+
+      body += buildSection('RESUMEN DE GASTOS');
+      body += buildRow('Tarjeta de Crédito',   creditVals,      fmtNeg, { isSubRow: true });
+      body += buildRow('Otros Gastos (banco)', otherVals,       fmtNeg, { isSubRow: true });
+      body += buildRow('Total Gastos',         totalGastosVals, fmtNeg, { isTotalRow: true });
+
+      /* ── DESGLOSE POR FUENTE ──────────────────────────── */
+      const sortedSrcs = Object.keys(breakdown.source_totals)
+        .sort((a, b) => breakdown.source_totals[b] - breakdown.source_totals[a]);
+      if (sortedSrcs.length) {
+        body += buildSection('DESGLOSE POR FUENTE');
+        sortedSrcs.forEach(src => {
+          const srcVals = months.map(ym => breakdown.by_source[src]?.[ym] ?? null);
+          body += buildRow(SOURCE_LABELS[src] || src, srcVals, fmtNeg, { isSubRow: true });
+        });
+      }
+
+      /* ── DESGLOSE POR CATEGORÍA (solo si hay categorías reales) ── */
+      const catEntries = Object.entries(breakdown.category_totals)
+        .sort((a, b) => b[1] - a[1]);
+      const hasRealCats = catEntries.some(([cat]) => cat !== 'Sin categoría');
+      if (hasRealCats) {
+        body += buildSection('DESGLOSE POR CATEGORÍA');
+        catEntries.forEach(([cat]) => {
+          const catVals = months.map(ym => breakdown.by_category[cat]?.[ym] ?? null);
+          body += buildRow(cat, catVals, fmtNeg, { isSubRow: true });
+        });
+      }
+
+      document.getElementById('t-body').innerHTML = body;
+      document.getElementById('dashboard-wrap').style.display = '';
+    })
+    .catch(() => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
+      document.getElementById('error').style.display   = '';
+    });
   }
 
   load();

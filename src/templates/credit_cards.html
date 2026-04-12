@@ -49,7 +49,7 @@
           '<td class="text-center text-sm text-base-content/50 hidden sm:table-cell">' + row.pending_installments + '</td>' +
           '<td class="text-right text-sm text-error hidden sm:table-cell">' + fmt(row.remaining_debt) + '</td>' +
           '<td class="text-right text-sm text-base-content/50 hidden md:table-cell">' + fmt(row.total_debt) + '</td>' +
-          '<td class="text-center text-sm text-info hidden md:table-cell">' + formatMonth(row.payoff_month) + '</td>' +
+          '<td class="text-center text-sm text-success hidden md:table-cell">' + formatMonth(row.payoff_month) + '</td>' +
           '</tr>'
         ).join('');
 
@@ -76,7 +76,7 @@
               '</div>' +
               '<div class="stat py-3 px-4">' +
                 '<div class="stat-title text-xs">Se salda en</div>' +
-                '<div class="stat-value text-base text-info">' + formatMonth(card.payoff_month) + '</div>' +
+                '<div class="stat-value text-base text-success">' + formatMonth(card.payoff_month) + '</div>' +
               '</div>' +
             '</div>' +
             '<details class="collapse collapse-arrow bg-base-300 mt-3">' +
