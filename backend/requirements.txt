@@ -1,5 +1,4 @@
-fastapi
-uvicorn[standard]
+flask
 python-dotenv
 psycopg2-binary
 pandas
@@ -7,5 +6,4 @@ openpyxl
 xlrd
 pdfplumber
 sqlalchemy
-python-multipart
 pydantic

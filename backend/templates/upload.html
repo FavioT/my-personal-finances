@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display:flex;flex-direction:column;gap:16px">
+
+  <!-- XLS -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128196; Caja de ahorro (XLS / XLSX)</legend>
+      <p class="white-text" style="margin:4px 0 10px">Subí tu extracto bancario</p>
+      <button class="tui-button cyan-168 white-text" onclick="document.getElementById('xls-input').click()">Seleccionar archivo XLS/XLSX</button>
+      <input id="xls-input" type="file" accept=".xls,.xlsx" hidden>
+      <div id="xls-loading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px;display:none"></div>
+      <div id="xls-result" style="margin-top:8px;display:none"></div>
+      <p id="xls-error" class="red-255-text" style="margin-top:8px;display:none"></p>
+    </fieldset>
+  </div>
+
+  <!-- BBVA VISA -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; BBVA VISA</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA VISA</p>
+      <textarea id="bbva-visa-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen BBVA VISA..."></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button cyan-168 white-text" onclick="uploadText('bbva-visa', '/api/upload/credit-card/bbva-visa')">Importar BBVA VISA</button>
+      </div>
+      <div id="bbva-visa-loading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px;display:none"></div>
+      <div id="bbva-visa-result" style="margin-top:8px;display:none"></div>
+      <p id="bbva-visa-error" class="red-255-text" style="margin-top:8px;display:none"></p>
+    </fieldset>
+  </div>
+
+  <!-- BBVA Mastercard -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; BBVA Mastercard</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA Mastercard</p>
+      <textarea id="bbva-mc-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button yellow-168 black-text" onclick="uploadText('bbva-mc', '/api/upload/credit-card/bbva-mastercard')">Importar BBVA Mastercard</button>
+      </div>
+      <div id="bbva-mc-loading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px;display:none"></div>
+      <div id="bbva-mc-result" style="margin-top:8px;display:none"></div>
+      <p id="bbva-mc-error" class="red-255-text" style="margin-top:8px;display:none"></p>
+    </fieldset>
+  </div>
+
+  <!-- Macro -->
+  <div class="tui-window full-width" style="padding:12px">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">&#128179; Macro Mastercard</legend>
+      <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen Macro</p>
+      <textarea id="macro-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen Macro..."></textarea>
+      <div style="margin-top:8px">
+        <button class="tui-button yellow-168 black-text" onclick="uploadText('macro', '/api/upload/credit-card/macro')">Importar Macro</button>
+      </div>
+      <div id="macro-loading" class="tui-progress-bar tui-indeterminate" style="margin-top:8px;display:none"></div>
+      <div id="macro-result" style="margin-top:8px;display:none"></div>
+      <p id="macro-error" class="red-255-text" style="margin-top:8px;display:none"></p>
+    </fieldset>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('xls-input').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const loading = document.getElementById('xls-loading');
+    const result  = document.getElementById('xls-result');
+    const error   = document.getElementById('xls-error');
+    loading.style.display = ''; result.style.display = 'none'; error.style.display = 'none';
+    const fd = new FormData();
+    fd.append('file', file);
+    fetch('/api/upload/xls', { method: 'POST', body: fd })
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        loading.style.display = 'none';
+        if (ok) {
+          result.innerHTML = '<p class="green-255-text">&#10003; ' + data.length + ' transacciones importadas.</p>';
+          result.style.display = '';
+        } else {
+          error.textContent = data.detail || 'Error al subir el archivo.';
+          error.style.display = '';
+        }
+      })
+      .catch(() => {
+        loading.style.display = 'none';
+        error.textContent = 'Error al subir el archivo.';
+        error.style.display = '';
+      });
+  });
+
+  function uploadText(prefix, url) {
+    const text = document.getElementById(prefix + '-text').value.trim();
+    if (!text) return;
+    const loading = document.getElementById(prefix + '-loading');
+    const result  = document.getElementById(prefix + '-result');
+    const error   = document.getElementById(prefix + '-error');
+    loading.style.display = ''; result.style.display = 'none'; error.style.display = 'none';
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        loading.style.display = 'none';
+        if (ok) {
+          document.getElementById(prefix + '-text').value = '';
+          result.innerHTML = '<p class="green-255-text">&#10003; ' + data.length + ' transacciones importadas.</p>';
+          result.style.display = '';
+        } else {
+          error.textContent = data.detail || 'Error al procesar el resumen.';
+          error.style.display = '';
+        }
+      })
+      .catch(() => {
+        loading.style.display = 'none';
+        error.textContent = 'Error al procesar el resumen.';
+        error.style.display = '';
+      });
+  }
+</script>
+{% endblock %}

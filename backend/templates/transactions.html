@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="notification" class="tui-window full-width" style="padding:8px;margin-bottom:8px;text-align:center;display:none">
+  <span class="white-text" id="notification-msg"></span>
+</div>
+
+<div id="loading" class="tui-window full-width" style="padding:12px">
+  <div class="tui-progress-bar tui-indeterminate"></div>
+  <p class="white-text">Cargando transacciones...</p>
+</div>
+
+<div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
+  <p class="red-255-text" id="error-msg"></p>
+</div>
+
+<div id="empty" class="tui-window full-width" style="padding:16px;text-align:center;display:none">
+  <p class="white-text">Sin transacciones. <a href="/upload" class="cyan-255-text">Subí un archivo</a> para importar.</p>
+</div>
+
+<div id="table-container" class="tui-window full-width" style="padding:12px;overflow-x:auto;display:none">
+  <fieldset class="tui-fieldset">
+    <legend class="white-255-text" id="table-legend">Transacciones</legend>
+    <table class="tui-table hovered-cyan" style="width:100%">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th>Monto</th>
+          <th>Moneda</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </fieldset>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const fmt = n => Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  function showNotification(msg) {
+    const el = document.getElementById('notification');
+    document.getElementById('notification-msg').textContent = msg;
+    el.style.display = '';
+    setTimeout(() => el.style.display = 'none', 3000);
+  }
+
+  function deleteTransaction(id) {
+    if (!confirm('¿Eliminar esta transacción?')) return;
+    fetch('/api/transactions/' + id, { method: 'DELETE' })
+      .then(r => {
+        if (r.ok) {
+          document.getElementById('row-' + id).remove();
+          showNotification('Transacción eliminada');
+        } else {
+          showNotification('Error al eliminar la transacción');
+        }
+      });
+  }
+
+  fetch('/api/transactions')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+      if (data.length === 0) {
+        document.getElementById('empty').style.display = '';
+        return;
+      }
+      document.getElementById('table-legend').textContent = 'Transacciones (' + data.length + ')';
+      const tbody = document.getElementById('table-body');
+      data.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.id = 'row-' + t.id;
+        const amtClass = t.amount > 0 ? 'positive' : 'negative';
+        tr.innerHTML =
+          '<td class="white-text">' + t.date + '</td>' +
+          '<td class="white-text">' + t.description + '</td>' +
+          '<td class="' + amtClass + '">' + fmt(t.amount) + '</td>' +
+          '<td class="white-text">' + t.currency + '</td>' +
+          '<td><button class="tui-button red-168 white-text" style="padding:0 6px;font-size:11px" onclick="deleteTransaction(' + t.id + ')">&#10005;</button></td>';
+        tbody.appendChild(tr);
+      });
+      document.getElementById('table-container').style.display = '';
+    })
+    .catch(() => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
+      document.getElementById('error').style.display = '';
+    });
+</script>
+{% endblock %}

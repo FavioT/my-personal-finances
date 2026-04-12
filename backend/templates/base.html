@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Finanzas Personales</title>
+  <link rel="stylesheet" href="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.css">
+  <style>
+    .positive { color: #00ff00; }
+    .negative { color: #ff5555; }
+    .tui-statusbar { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 1000; }
+    .app-content { padding: 28px 16px 44px; min-height: calc(100vh - 56px); }
+  </style>
+</head>
+<body>
+  <nav class="tui-nav">
+    <span class="tui-datetime" data-format="h:m:s a"></span>
+    <ul>
+      <li><a href="/dashboard" class="{{ 'tui-active' if request.path in ('/', '/dashboard') else '' }}"><span class="red-168-text">D</span>ashboard</a></li>
+      <li><a href="/transactions" class="{{ 'tui-active' if request.path == '/transactions' else '' }}"><span class="red-168-text">T</span>ransacciones</a></li>
+      <li><a href="/upload" class="{{ 'tui-active' if request.path == '/upload' else '' }}"><span class="red-168-text">S</span>ubir archivos</a></li>
+      <li><a href="/credit-cards" class="{{ 'tui-active' if request.path == '/credit-cards' else '' }}">Tar<span class="red-168-text">j</span>etas</a></li>
+    </ul>
+  </nav>
+
+  <div class="app-content">
+    {% block content %}{% endblock %}
+  </div>
+
+  <div class="tui-statusbar">
+    <ul>
+      <li><span class="white-255-text">Mis Finanzas Personales</span></li>
+    </ul>
+  </div>
+
+  <script src="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="loading" class="tui-window full-width" style="padding:12px">
+  <div class="tui-progress-bar tui-indeterminate"></div>
+  <p class="white-text">Cargando...</p>
+</div>
+
+<div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
+  <p class="red-255-text" id="error-msg"></p>
+</div>
+
+<div id="content" style="display:none">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Ingresos</legend>
+        <p class="green-255-text" id="total-income" style="font-size:1.4em;margin:4px 0"></p>
+      </fieldset>
+    </div>
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Gastos</legend>
+        <p class="red-255-text" id="total-expenses" style="font-size:1.4em;margin:4px 0"></p>
+      </fieldset>
+    </div>
+
+    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
+      <fieldset class="tui-fieldset">
+        <legend class="white-255-text">Balance</legend>
+        <p id="balance" style="font-size:1.4em;margin:4px 0"></p>
+      </fieldset>
+    </div>
+
+  </div>
+
+  <div id="chart-container" class="tui-window full-width" style="padding:12px;display:none">
+    <fieldset class="tui-fieldset">
+      <legend class="white-255-text">Ingresos vs Gastos</legend>
+      <div style="max-width:340px;margin:0 auto">
+        <canvas id="pie-chart"></canvas>
+      </div>
+    </fieldset>
+  </div>
+
+  <div id="empty-state" class="tui-window full-width" style="padding:16px;text-align:center;display:none">
+    <p class="white-text">Sin transacciones. <a href="/upload" class="cyan-255-text">Subí tu primer archivo</a> para comenzar.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+  const fmt = n => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  fetch('/api/transactions/summary')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = '';
+
+      document.getElementById('total-income').textContent = fmt(data.total_income);
+      document.getElementById('total-expenses').textContent = fmt(data.total_expenses);
+
+      const balEl = document.getElementById('balance');
+      balEl.textContent = fmt(data.balance);
+      balEl.className = data.balance >= 0 ? 'green-255-text' : 'red-255-text';
+      balEl.style.cssText = 'font-size:1.4em;margin:4px 0';
+
+      if (data.total_income > 0 || data.total_expenses < 0) {
+        document.getElementById('chart-container').style.display = '';
+        new Chart(document.getElementById('pie-chart'), {
+          type: 'pie',
+          data: {
+            labels: ['Ingresos', 'Gastos'],
+            datasets: [{
+              data: [data.total_income, Math.abs(data.total_expenses)],
+              backgroundColor: ['#00A800', '#A80000']
+            }]
+          }
+        });
+      } else {
+        document.getElementById('empty-state').style.display = '';
+      }
+    })
+    .catch(() => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
+      document.getElementById('error').style.display = '';
+    });
+</script>
+{% endblock %}
