@@ -42,3 +42,8 @@ app.include_router(transactions.router, prefix='/transactions', tags=['transacti
 @app.get('/')
 def root():
     return {'message': 'My Personal Finances API is running'}
+
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True)

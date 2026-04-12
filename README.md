@@ -4,8 +4,41 @@ A personal finance dashboard that processes bank account summaries (`.xls`/`.xls
 
 ## Stack
 
-- **Backend:** Python 3.11+, FastAPI, pandas, pdfplumber, SQLAlchemy, SQLite
+- **Backend:** Python 3.11+, FastAPI, pandas, pdfplumber, SQLAlchemy, SQLite/PostgreSQL
 - **Frontend:** Angular 18+, TypeScript, Angular Material, ng2-charts (Chart.js)
+- **Deployment:** Vercel (Python serverless + static Angular)
+
+## Deploying to Vercel
+
+### 1. Database (Neon PostgreSQL)
+Create a free [Neon](https://neon.tech) project and copy the connection string.
+
+### 2. Vercel Environment Variables
+Set these in your Vercel project → Settings → Environment Variables:
+
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | Neon PostgreSQL connection string | `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require` |
+| `FRONTEND_ORIGIN` | Your Vercel deployment URL (for CORS) | `https://my-personal-finances.vercel.app` |
+
+### 3. Deploy
+```bash
+# Install Vercel CLI if needed
+npm install -g vercel
+
+# From the project root
+vercel
+```
+
+Or connect the GitHub repo to Vercel for automatic deployments on push.
+
+### How it works
+- `api/index.py` exposes the FastAPI app as a Vercel Python serverless function
+- Routes matching `/api/*` are forwarded to the Python function
+- Angular is built via `frontend/package.json`'s `vercel-build` script and served as static files
+- Angular's client-side routing is handled by the fallback `/(.*) → index.html` route
+
+---
 
 ## Requirements
 
