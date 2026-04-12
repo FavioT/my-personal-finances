@@ -1,6 +1,6 @@
 frontend/node_modules
 frontend/dist
-backend/.venv
+src/.venv
 **/__pycache__
 **/*.pyc
 *.db
