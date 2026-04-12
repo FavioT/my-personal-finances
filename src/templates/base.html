@@ -10,20 +10,38 @@
     .negative { color: #ff5555; }
     .tui-statusbar { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 1000; }
     .app-content { padding: 28px 16px 44px; min-height: calc(100vh - 56px); }
-    /* Evitar fondos blancos de TuiCSS en tablas y ventanas (excepto dashboard) */
-    .tui-table:not(#dashboard-table) td, .tui-table:not(#dashboard-table) th { background-color: transparent !important; }
+    /* Evitar fondos blancos de TuiCSS en tablas y ventanas (excepto dashboard y credit cards) */
+    .tui-table:not(#dashboard-table):not(.cc-detail-table) td,
+    .tui-table:not(#dashboard-table):not(.cc-detail-table) th { background-color: transparent !important; }
     .tui-window { background-color: transparent !important; }
     body { background-color: transparent !important; }
+    /* ── Sidenav mobile ──────────────────────────────────── */
+    .tui-sidenav-button { display: none !important; cursor: pointer; }
+    @media (max-width: 640px) {
+      .nav-links { display: none !important; }
+      .tui-sidenav-button { display: list-item !important; }
+    }
   </style>
 </head>
 <body>
-  <nav class="tui-nav">
-    <span class="tui-datetime" data-format="h:m:s a"></span>
+  <nav class="tui-sidenav left" id="sidenav">
     <ul>
       <li><a href="/dashboard" class="{{ 'tui-active' if request.path in ('/', '/dashboard') else '' }}"><span class="red-168-text">D</span>ashboard</a></li>
       <li><a href="/transactions" class="{{ 'tui-active' if request.path == '/transactions' else '' }}"><span class="red-168-text">T</span>ransacciones</a></li>
       <li><a href="/upload" class="{{ 'tui-active' if request.path == '/upload' else '' }}"><span class="red-168-text">S</span>ubir archivos</a></li>
       <li><a href="/credit-cards" class="{{ 'tui-active' if request.path == '/credit-cards' else '' }}">Tar<span class="red-168-text">j</span>etas</a></li>
+    </ul>
+  </nav>
+  <nav class="tui-nav">
+    <span class="tui-datetime" data-format="h:m:s a"></span>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="{{ 'tui-active' if request.path in ('/', '/dashboard') else '' }}"><span class="red-168-text">D</span>ashboard</a></li>
+      <li><a href="/transactions" class="{{ 'tui-active' if request.path == '/transactions' else '' }}"><span class="red-168-text">T</span>ransacciones</a></li>
+      <li><a href="/upload" class="{{ 'tui-active' if request.path == '/upload' else '' }}"><span class="red-168-text">S</span>ubir archivos</a></li>
+      <li><a href="/credit-cards" class="{{ 'tui-active' if request.path == '/credit-cards' else '' }}">Tar<span class="red-168-text">j</span>etas</a></li>
+    </ul>
+    <ul>
+      <li class="tui-sidenav-button">&#9776;</li>
     </ul>
   </nav>
 
@@ -38,6 +56,16 @@
   </div>
 
   <script src="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.js"></script>
+  <script>
+    document.addEventListener('click', function(e) {
+      const nav = document.getElementById('sidenav');
+      if (nav.classList.contains('active') &&
+          !nav.contains(e.target) &&
+          !e.target.closest('.tui-sidenav-button')) {
+        nav.classList.remove('active');
+      }
+    });
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

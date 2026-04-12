@@ -1,12 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="display:flex;flex-direction:column;gap:16px">
+<style>
+  .cc-card {
+    border: 1px solid #2e5a7a;
+    padding: 14px 16px 10px;
+    background: #040c12;
+  }
+  .tui-fieldset {
+    border: 1px solid #1a3a4e !important;
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .tui-fieldset legend {
+    color: #44ccff;
+    font-weight: bold;
+    padding: 0 6px;
+  }
+  @media (max-width: 640px) {
+    .upload-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+
+<div class="upload-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
 
   <!-- XLS -->
-  <div class="tui-window full-width" style="padding:12px">
+  <div class="cc-card full-width">
     <fieldset class="tui-fieldset">
-      <legend class="white-255-text">&#128196; Caja de ahorro (XLS / XLSX)</legend>
+      <legend>Caja de ahorro (XLS / XLSX)</legend>
       <p class="white-text" style="margin:4px 0 10px">Subí tu extracto bancario</p>
       <button class="tui-button cyan-168 white-text" onclick="document.getElementById('xls-input').click()">Seleccionar archivo XLS/XLSX</button>
       <input id="xls-input" type="file" accept=".xls,.xlsx" hidden>
@@ -17,9 +38,9 @@
   </div>
 
   <!-- BBVA VISA -->
-  <div class="tui-window full-width" style="padding:12px">
+  <div class="cc-card full-width">
     <fieldset class="tui-fieldset">
-      <legend class="white-255-text">&#128179; BBVA VISA</legend>
+      <legend>BBVA VISA</legend>
       <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA VISA</p>
       <textarea id="bbva-visa-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen BBVA VISA..."></textarea>
       <div style="margin-top:8px">
@@ -32,9 +53,9 @@
   </div>
 
   <!-- BBVA Mastercard -->
-  <div class="tui-window full-width" style="padding:12px">
+  <div class="cc-card full-width">
     <fieldset class="tui-fieldset">
-      <legend class="white-255-text">&#128179; BBVA Mastercard</legend>
+      <legend>BBVA Mastercard</legend>
       <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen BBVA Mastercard</p>
       <textarea id="bbva-mc-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."></textarea>
       <div style="margin-top:8px">
@@ -47,9 +68,9 @@
   </div>
 
   <!-- Macro -->
-  <div class="tui-window full-width" style="padding:12px">
+  <div class="cc-card full-width">
     <fieldset class="tui-fieldset">
-      <legend class="white-255-text">&#128179; Macro Mastercard</legend>
+      <legend>Macro Mastercard</legend>
       <p class="white-text" style="margin:4px 0 8px">Pegá el texto del resumen Macro</p>
       <textarea id="macro-text" class="tui-input" rows="7" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Pegá aquí el texto del resumen Macro..."></textarea>
       <div style="margin-top:8px">

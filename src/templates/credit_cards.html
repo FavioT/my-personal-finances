@@ -1,6 +1,63 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  /* ── Card wrapper ────────────────────────────────────── */
+  .cc-card {
+    border: 1px solid #2e5a7a;
+    padding: 14px 16px 10px;
+    margin-bottom: 18px;
+    background: #040c12;
+  }
+
+  /* ── Card header summary row ─────────────────────────── */
+  .cc-stats { display:flex; gap:28px; flex-wrap:wrap; margin-bottom:14px; }
+  .cc-stat-label { font-size:10px; color:#6ba0bb; text-transform:uppercase; letter-spacing:.09em; }
+  .cc-stat-value { font-size:16px; font-weight:bold; margin-top:3px; }
+
+  /* ── Fieldset ────────────────────────────────────────── */
+  .cc-card fieldset {
+    border: 1px solid #1a3a4e;
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .cc-card legend { color: #44ccff; font-weight: bold; padding: 0 6px; }
+
+  /* ── Details toggle ──────────────────────────────────── */
+  .cc-card summary {
+    cursor: pointer;
+    color: #80b8cc;
+    font-size: 12px;
+    margin-bottom: 8px;
+    user-select: none;
+  }
+  .cc-card summary:hover { color: #aaddee; }
+
+  /* ── Detail table ────────────────────────────────────── */
+  .cc-detail-table { width: 100%; font-size: 12px; }
+  .cc-detail-table thead th {
+    background: #071520 !important;
+    color: #55aacc !important;
+    font-size: 11px;
+    letter-spacing: .05em;
+  }
+  .cc-detail-table tbody td { background: #050f18 !important; color: #cce6ee !important; }
+  .cc-detail-table tbody tr:hover td { background: #0a1e2e !important; }
+  .cc-td-right  { text-align: right !important; }
+  .cc-td-center { text-align: center !important; }
+  .cc-v-debt    { color: #ff6666 !important; }
+  .cc-v-payoff  { color: #44ddff !important; }
+  .cc-v-muted   { color: #889aaa !important; }
+
+  /* ── Responsive: ocultar columnas en mobile ──────────── */
+  @media (max-width: 640px) {
+    .cc-col-pend,
+    .cc-col-saldo,
+    .cc-col-total,
+    .cc-col-payoff { display: none; }
+  }
+</style>
+
 <div id="loading" class="tui-window full-width" style="padding:12px">
   <div class="tui-progress-bar tui-indeterminate"></div>
 </div>
@@ -9,8 +66,8 @@
   <p class="red-255-text" id="error-msg"></p>
 </div>
 
-<div id="empty" class="tui-window full-width" style="padding:16px;display:none">
-  <p class="white-text">No hay gastos con tarjeta de crédito. Importá tu resumen desde <a href="/upload" class="cyan-255-text">Subir archivos</a>.</p>
+<div id="empty" style="padding:16px;display:none;border:1px solid #2e5a7a;background:#040c12">
+  <p style="color:#cce6ee">No hay gastos con tarjeta de crédito. Importá tu resumen desde <a href="/upload" style="color:#44ccff">Subir archivos</a>.</p>
 </div>
 
 <div id="cards-container"></div>
@@ -21,7 +78,7 @@
   const fmt = n => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
   function formatMonth(ym) {
-    if (!ym) return '-';
+    if (!ym) return '—';
     const [year, m] = ym.split('-');
     const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     return names[parseInt(m, 10) - 1] + ' ' + year;
@@ -39,44 +96,44 @@
       data.cards.forEach(card => {
         const rows = card.items.map(row =>
           '<tr>' +
-          '<td class="white-text">' + row.description + '</td>' +
-          '<td class="white-text" style="text-align:right">' + fmt(row.monthly_amount) + '</td>' +
-          '<td class="white-text" style="text-align:center">' + row.installment_current + ' / ' + row.installment_total + '</td>' +
-          '<td class="white-text" style="text-align:center">' + row.pending_installments + '</td>' +
-          '<td class="red-255-text" style="text-align:right">' + fmt(row.remaining_debt) + '</td>' +
-          '<td class="white-text" style="text-align:right">' + fmt(row.total_debt) + '</td>' +
-          '<td class="cyan-255-text" style="text-align:center">' + formatMonth(row.payoff_month) + '</td>' +
+          '<td>' + row.description + '</td>' +
+          '<td class="cc-td-right">' + fmt(row.monthly_amount) + '</td>' +
+          '<td class="cc-td-center cc-v-muted">' + row.installment_current + ' / ' + row.installment_total + '</td>' +
+          '<td class="cc-td-center cc-v-muted cc-col-pend">' + row.pending_installments + '</td>' +
+          '<td class="cc-td-right cc-v-debt cc-col-saldo">' + fmt(row.remaining_debt) + '</td>' +
+          '<td class="cc-td-right cc-v-muted cc-col-total">' + fmt(row.total_debt) + '</td>' +
+          '<td class="cc-td-center cc-v-payoff cc-col-payoff">' + formatMonth(row.payoff_month) + '</td>' +
           '</tr>'
         ).join('');
 
         const div = document.createElement('div');
-        div.className = 'tui-window full-width';
-        div.style.cssText = 'padding:12px;margin-bottom:20px';
+        div.className = 'cc-card';
         div.innerHTML =
-          '<fieldset class="tui-fieldset">' +
-          '<legend class="cyan-255-text"><b>' + card.card + '</b> &mdash; ' + card.card_network + '</legend>' +
-          '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px">' +
-            '<div><div class="white-255-text" style="font-size:0.75em">Cuota mensual</div><div class="red-255-text"><b>' + fmt(card.total_monthly) + '</b></div></div>' +
-            '<div><div class="white-255-text" style="font-size:0.75em">Deuda restante</div><div class="red-255-text"><b>' + fmt(card.total_remaining_debt) + '</b></div></div>' +
-            '<div><div class="white-255-text" style="font-size:0.75em">Deuda total</div><div class="white-text"><b>' + fmt(card.total_debt) + '</b></div></div>' +
-            '<div><div class="white-255-text" style="font-size:0.75em">Se salda en</div><div class="cyan-255-text"><b>' + formatMonth(card.payoff_month) + '</b></div></div>' +
+          '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">' +
+            '<span style="color:#44ccff;font-size:15px;font-weight:bold">' + card.card + '</span>' +
+            '<span style="color:#446677;font-size:11px;text-transform:uppercase;letter-spacing:.1em">' + card.card_network + '</span>' +
+          '</div>' +
+          '<div class="cc-stats">' +
+            '<div><div class="cc-stat-label">Cuota mensual</div><div class="cc-stat-value cc-v-debt">' + fmt(card.total_monthly) + '</div></div>' +
+            '<div><div class="cc-stat-label">Deuda restante</div><div class="cc-stat-value cc-v-debt">' + fmt(card.total_remaining_debt) + '</div></div>' +
+            '<div><div class="cc-stat-label">Deuda total</div><div class="cc-stat-value" style="color:#cce6ee">' + fmt(card.total_debt) + '</div></div>' +
+            '<div><div class="cc-stat-label">Se salda en</div><div class="cc-stat-value cc-v-payoff">' + formatMonth(card.payoff_month) + '</div></div>' +
           '</div>' +
           '<details>' +
-          '<summary class="white-text" style="cursor:pointer;margin-bottom:8px">Ver detalle (' + card.items.length + ' movimientos)</summary>' +
-          '<table class="tui-table hovered-cyan" style="width:100%">' +
+          '<summary class="cc-card" style="border:none;padding:2px 0;margin:0;background:transparent">▸ Ver detalle (' + card.items.length + ' movimientos)</summary>' +
+          '<table class="tui-table cc-detail-table" style="margin-top:8px">' +
           '<thead><tr>' +
-          '<th class="white-255-text">Descripción</th>' +
-          '<th class="white-255-text" style="text-align:right">Cuota</th>' +
-          '<th class="white-255-text" style="text-align:center">Cuotas</th>' +
-          '<th class="white-255-text" style="text-align:center">Pend.</th>' +
-          '<th class="white-255-text" style="text-align:right">Saldo</th>' +
-          '<th class="white-255-text" style="text-align:right">Total</th>' +
-          '<th class="white-255-text" style="text-align:center">Se salda</th>' +
+          '<th>Descripción</th>' +
+          '<th class="cc-td-right">Cuota</th>' +
+          '<th class="cc-td-center">Cuotas</th>' +
+          '<th class="cc-td-center cc-col-pend">Pend.</th>' +
+          '<th class="cc-td-right cc-col-saldo">Saldo</th>' +
+          '<th class="cc-td-right cc-col-total">Total</th>' +
+          '<th class="cc-td-center cc-col-payoff">Se salda</th>' +
           '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
           '</table>' +
-          '</details>' +
-          '</fieldset>';
+          '</details>';
         container.appendChild(div);
       });
     })
