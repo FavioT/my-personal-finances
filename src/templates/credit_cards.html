@@ -1,76 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  /* ── Card wrapper ────────────────────────────────────── */
-  .cc-card {
-    border: 1px solid #2e5a7a;
-    padding: 14px 16px 10px;
-    margin-bottom: 18px;
-    background: #040c12;
-  }
 
-  /* ── Card header summary row ─────────────────────────── */
-  .cc-stats { display:flex; gap:28px; flex-wrap:wrap; margin-bottom:14px; }
-  .cc-stat-label { font-size:10px; color:#6ba0bb; text-transform:uppercase; letter-spacing:.09em; }
-  .cc-stat-value { font-size:16px; font-weight:bold; margin-top:3px; }
-
-  /* ── Fieldset ────────────────────────────────────────── */
-  .cc-card fieldset {
-    border: 1px solid #1a3a4e;
-    padding: 10px 14px;
-    margin-top: 10px;
-  }
-  .cc-card legend { color: #44ccff; font-weight: bold; padding: 0 6px; }
-
-  /* ── Details toggle ──────────────────────────────────── */
-  .cc-card summary {
-    cursor: pointer;
-    color: #80b8cc;
-    font-size: 12px;
-    margin-bottom: 8px;
-    user-select: none;
-  }
-  .cc-card summary:hover { color: #aaddee; }
-
-  /* ── Detail table ────────────────────────────────────── */
-  .cc-detail-table { width: 100%; font-size: 12px; }
-  .cc-detail-table thead th {
-    background: #071520 !important;
-    color: #55aacc !important;
-    font-size: 11px;
-    letter-spacing: .05em;
-  }
-  .cc-detail-table tbody td { background: #050f18 !important; color: #cce6ee !important; }
-  .cc-detail-table tbody tr:hover td { background: #0a1e2e !important; }
-  .cc-td-right  { text-align: right !important; }
-  .cc-td-center { text-align: center !important; }
-  .cc-v-debt    { color: #ff6666 !important; }
-  .cc-v-payoff  { color: #44ddff !important; }
-  .cc-v-muted   { color: #889aaa !important; }
-
-  /* ── Responsive: ocultar columnas en mobile ──────────── */
-  @media (max-width: 640px) {
-    .cc-col-pend,
-    .cc-col-saldo,
-    .cc-col-total,
-    .cc-col-payoff { display: none; }
-  }
-</style>
-
-<div id="loading" class="tui-window full-width" style="padding:12px">
-  <div class="tui-progress-bar tui-indeterminate"></div>
+<div id="loading" class="flex items-center gap-3 p-6 text-base-content/60">
+  <span class="loading loading-spinner loading-md text-primary"></span>
+  <span class="text-sm">Cargando tarjetas...</span>
 </div>
 
-<div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
-  <p class="red-255-text" id="error-msg"></p>
+<div id="error" class="alert alert-error text-sm" style="display:none">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/></svg>
+  <span id="error-msg"></span>
 </div>
 
-<div id="empty" style="padding:16px;display:none;border:1px solid #2e5a7a;background:#040c12">
-  <p style="color:#cce6ee">No hay gastos con tarjeta de crédito. Importá tu resumen desde <a href="/upload" style="color:#44ccff">Subir archivos</a>.</p>
+<div id="empty" class="alert text-sm" style="display:none">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+  <span>No hay gastos con tarjeta de crédito. Importá tu resumen desde <a href="/upload" class="link link-primary">Subir archivos</a>.</span>
 </div>
 
-<div id="cards-container"></div>
+<div id="cards-container" class="flex flex-col gap-4"></div>
 {% endblock %}
 
 {% block scripts %}
@@ -96,44 +43,63 @@
       data.cards.forEach(card => {
         const rows = card.items.map(row =>
           '<tr>' +
-          '<td>' + row.description + '</td>' +
-          '<td class="cc-td-right">' + fmt(row.monthly_amount) + '</td>' +
-          '<td class="cc-td-center cc-v-muted">' + row.installment_current + ' / ' + row.installment_total + '</td>' +
-          '<td class="cc-td-center cc-v-muted cc-col-pend">' + row.pending_installments + '</td>' +
-          '<td class="cc-td-right cc-v-debt cc-col-saldo">' + fmt(row.remaining_debt) + '</td>' +
-          '<td class="cc-td-right cc-v-muted cc-col-total">' + fmt(row.total_debt) + '</td>' +
-          '<td class="cc-td-center cc-v-payoff cc-col-payoff">' + formatMonth(row.payoff_month) + '</td>' +
+          '<td class="text-sm">' + row.description + '</td>' +
+          '<td class="text-right text-sm">' + fmt(row.monthly_amount) + '</td>' +
+          '<td class="text-center text-sm text-base-content/50">' + row.installment_current + ' / ' + row.installment_total + '</td>' +
+          '<td class="text-center text-sm text-base-content/50 hidden sm:table-cell">' + row.pending_installments + '</td>' +
+          '<td class="text-right text-sm text-error hidden sm:table-cell">' + fmt(row.remaining_debt) + '</td>' +
+          '<td class="text-right text-sm text-base-content/50 hidden md:table-cell">' + fmt(row.total_debt) + '</td>' +
+          '<td class="text-center text-sm text-info hidden md:table-cell">' + formatMonth(row.payoff_month) + '</td>' +
           '</tr>'
         ).join('');
 
         const div = document.createElement('div');
-        div.className = 'cc-card';
+        div.className = 'card bg-base-200 shadow';
         div.innerHTML =
-          '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">' +
-            '<span style="color:#44ccff;font-size:15px;font-weight:bold">' + card.card + '</span>' +
-            '<span style="color:#446677;font-size:11px;text-transform:uppercase;letter-spacing:.1em">' + card.card_network + '</span>' +
+          '<div class="card-body">' +
+            '<div class="flex items-baseline gap-3 mb-2">' +
+              '<h2 class="card-title text-primary">' + card.card + '</h2>' +
+              '<span class="text-xs text-base-content/40 uppercase tracking-widest">' + card.card_network + '</span>' +
+            '</div>' +
+            '<div class="stats bg-base-300 shadow flex-wrap w-full">' +
+              '<div class="stat py-3 px-4">' +
+                '<div class="stat-title text-xs">Cuota mensual</div>' +
+                '<div class="stat-value text-base text-error">' + fmt(card.total_monthly) + '</div>' +
+              '</div>' +
+              '<div class="stat py-3 px-4">' +
+                '<div class="stat-title text-xs">Deuda restante</div>' +
+                '<div class="stat-value text-base text-error">' + fmt(card.total_remaining_debt) + '</div>' +
+              '</div>' +
+              '<div class="stat py-3 px-4">' +
+                '<div class="stat-title text-xs">Deuda total</div>' +
+                '<div class="stat-value text-base">' + fmt(card.total_debt) + '</div>' +
+              '</div>' +
+              '<div class="stat py-3 px-4">' +
+                '<div class="stat-title text-xs">Se salda en</div>' +
+                '<div class="stat-value text-base text-info">' + formatMonth(card.payoff_month) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<details class="collapse collapse-arrow bg-base-300 mt-3">' +
+              '<summary class="collapse-title text-sm font-medium min-h-0 py-3">Ver detalle (' + card.items.length + ' movimientos)</summary>' +
+              '<div class="collapse-content">' +
+                '<div class="overflow-x-auto">' +
+                  '<table class="table table-xs">' +
+                    '<thead><tr>' +
+                      '<th>Descripción</th>' +
+                      '<th class="text-right">Cuota</th>' +
+                      '<th class="text-center">Cuotas</th>' +
+                      '<th class="text-center hidden sm:table-cell">Pend.</th>' +
+                      '<th class="text-right hidden sm:table-cell">Saldo</th>' +
+                      '<th class="text-right hidden md:table-cell">Total</th>' +
+                      '<th class="text-center hidden md:table-cell">Se salda</th>' +
+                    '</tr></thead>' +
+                    '<tbody>' + rows + '</tbody>' +
+                  '</table>' +
+                '</div>' +
+              '</div>' +
+            '</details>' +
           '</div>' +
-          '<div class="cc-stats">' +
-            '<div><div class="cc-stat-label">Cuota mensual</div><div class="cc-stat-value cc-v-debt">' + fmt(card.total_monthly) + '</div></div>' +
-            '<div><div class="cc-stat-label">Deuda restante</div><div class="cc-stat-value cc-v-debt">' + fmt(card.total_remaining_debt) + '</div></div>' +
-            '<div><div class="cc-stat-label">Deuda total</div><div class="cc-stat-value" style="color:#cce6ee">' + fmt(card.total_debt) + '</div></div>' +
-            '<div><div class="cc-stat-label">Se salda en</div><div class="cc-stat-value cc-v-payoff">' + formatMonth(card.payoff_month) + '</div></div>' +
-          '</div>' +
-          '<details>' +
-          '<summary class="cc-card" style="border:none;padding:2px 0;margin:0;background:transparent">▸ Ver detalle (' + card.items.length + ' movimientos)</summary>' +
-          '<table class="tui-table cc-detail-table" style="margin-top:8px">' +
-          '<thead><tr>' +
-          '<th>Descripción</th>' +
-          '<th class="cc-td-right">Cuota</th>' +
-          '<th class="cc-td-center">Cuotas</th>' +
-          '<th class="cc-td-center cc-col-pend">Pend.</th>' +
-          '<th class="cc-td-right cc-col-saldo">Saldo</th>' +
-          '<th class="cc-td-right cc-col-total">Total</th>' +
-          '<th class="cc-td-center cc-col-payoff">Se salda</th>' +
-          '</tr></thead>' +
-          '<tbody>' + rows + '</tbody>' +
-          '</table>' +
-          '</details>';
+        '</div>';
         container.appendChild(div);
       });
     })

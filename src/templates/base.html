@@ -1,72 +1,67 @@
 <!DOCTYPE html>
-<html lang="es" class="tui-bg-blue-black">
+<html lang="es" data-theme="aqua">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mis Finanzas Personales</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23040c12'/><rect x='1.5' y='1.5' width='29' height='29' rx='3' fill='none' stroke='%232e5a7a' stroke-width='2'/><line x1='16' y1='6' x2='16' y2='10' stroke='%2344ccff' stroke-width='2' stroke-linecap='round'/><line x1='16' y1='22' x2='16' y2='26' stroke='%2344ccff' stroke-width='2' stroke-linecap='round'/><path d='M20 10h-6a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-6' fill='none' stroke='%2344ccff' stroke-width='2.2' stroke-linecap='round'/></svg>">
-  <link rel="stylesheet" href="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .positive { color: #00ff00; }
-    .negative { color: #ff5555; }
-    .tui-statusbar { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 1000; }
-    .app-content { padding: 28px 16px 44px; min-height: calc(100vh - 56px); }
-    /* Evitar fondos blancos de TuiCSS en tablas y ventanas (excepto dashboard y credit cards) */
-    .tui-table:not(#dashboard-table):not(.cc-detail-table) td,
-    .tui-table:not(#dashboard-table):not(.cc-detail-table) th { background-color: transparent !important; }
-    .tui-window { background-color: transparent !important; }
-    body { background-color: transparent !important; }
-    /* ── Sidenav mobile ──────────────────────────────────── */
-    .tui-sidenav-button { display: none !important; cursor: pointer; }
-    @media (max-width: 640px) {
-      .nav-links { display: none !important; }
-      .tui-sidenav-button { display: list-item !important; }
-    }
+    .positive { color: oklch(var(--su)); }
+    .negative { color: oklch(var(--er)); }
   </style>
 </head>
-<body>
-  <nav class="tui-sidenav left" id="sidenav">
-    <ul>
-      <li><a href="/dashboard" class="{{ 'tui-active' if request.path in ('/', '/dashboard') else '' }}"><span class="red-168-text">D</span>ashboard</a></li>
-      <li><a href="/transactions" class="{{ 'tui-active' if request.path == '/transactions' else '' }}"><span class="red-168-text">T</span>ransacciones</a></li>
-      <li><a href="/upload" class="{{ 'tui-active' if request.path == '/upload' else '' }}"><span class="red-168-text">S</span>ubir archivos</a></li>
-      <li><a href="/credit-cards" class="{{ 'tui-active' if request.path == '/credit-cards' else '' }}">Tar<span class="red-168-text">j</span>etas</a></li>
-    </ul>
-  </nav>
-  <nav class="tui-nav">
-    <span class="tui-datetime" data-format="h:m:s a"></span>
-    <ul class="nav-links">
-      <li><a href="/dashboard" class="{{ 'tui-active' if request.path in ('/', '/dashboard') else '' }}"><span class="red-168-text">D</span>ashboard</a></li>
-      <li><a href="/transactions" class="{{ 'tui-active' if request.path == '/transactions' else '' }}"><span class="red-168-text">T</span>ransacciones</a></li>
-      <li><a href="/upload" class="{{ 'tui-active' if request.path == '/upload' else '' }}"><span class="red-168-text">S</span>ubir archivos</a></li>
-      <li><a href="/credit-cards" class="{{ 'tui-active' if request.path == '/credit-cards' else '' }}">Tar<span class="red-168-text">j</span>etas</a></li>
-    </ul>
-    <ul>
-      <li class="tui-sidenav-button">&#9776;</li>
-    </ul>
-  </nav>
+<body class="min-h-screen bg-base-100">
 
-  <div class="app-content">
-    {% block content %}{% endblock %}
+  <div class="drawer">
+    <input id="main-drawer" type="checkbox" class="drawer-toggle">
+    <div class="drawer-content flex flex-col min-h-screen">
+
+      <!-- Navbar -->
+      <div class="navbar bg-base-200 shadow-sm sticky top-0 z-30">
+        <div class="flex-none lg:hidden">
+          <label for="main-drawer" class="btn btn-square btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block h-5 w-5 stroke-current">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </label>
+        </div>
+        <div class="flex-1 px-2">
+          <span class="font-bold tracking-widest text-primary text-sm">MIS FINANZAS</span>
+        </div>
+        <div class="flex-none hidden lg:flex">
+          <ul class="menu menu-horizontal gap-1 text-sm">
+            <li><a href="/dashboard" class="{{ 'active' if request.path in ('/', '/dashboard') else '' }}">Dashboard</a></li>
+            <li><a href="/transactions" class="{{ 'active' if request.path == '/transactions' else '' }}">Transacciones</a></li>
+            <li><a href="/upload" class="{{ 'active' if request.path == '/upload' else '' }}">Subir archivos</a></li>
+            <li><a href="/credit-cards" class="{{ 'active' if request.path == '/credit-cards' else '' }}">Tarjetas</a></li>
+          </ul>
+          <a href="/logout" class="btn btn-ghost btn-sm ml-2 text-base-content/50 hover:text-error">Salir</a>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <main class="p-4 pb-10 flex-1">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div>
+
+    <!-- Sidenav drawer -->
+    <div class="drawer-side z-40">
+      <label for="main-drawer" class="drawer-overlay"></label>
+      <ul class="menu bg-base-200 min-h-full w-60 p-4 gap-1 text-sm">
+        <li class="menu-title text-xs tracking-widest">Navegación</li>
+        <li><a href="/dashboard" class="{{ 'active' if request.path in ('/', '/dashboard') else '' }}">Dashboard</a></li>
+        <li><a href="/transactions" class="{{ 'active' if request.path == '/transactions' else '' }}">Transacciones</a></li>
+        <li><a href="/upload" class="{{ 'active' if request.path == '/upload' else '' }}">Subir archivos</a></li>
+        <li><a href="/credit-cards" class="{{ 'active' if request.path == '/credit-cards' else '' }}">Tarjetas</a></li>
+        <li class="mt-auto"><a href="/logout" class="text-base-content/50">Cerrar sesión</a></li>
+      </ul>
+    </div>
   </div>
 
-  <div class="tui-statusbar">
-    <ul>
-      <li><span class="white-255-text">Mis Finanzas Personales</span></li>
-    </ul>
-  </div>
-
-  <script src="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.js"></script>
-  <script>
-    document.addEventListener('click', function(e) {
-      const nav = document.getElementById('sidenav');
-      if (nav.classList.contains('active') &&
-          !nav.contains(e.target) &&
-          !e.target.closest('.tui-sidenav-button')) {
-        nav.classList.remove('active');
-      }
-    });
-  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

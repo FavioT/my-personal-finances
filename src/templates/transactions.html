@@ -1,53 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  .cc-card {
-    border: 1px solid #2e5a7a;
-    padding: 14px 16px 10px;
-    margin-bottom: 18px;
-    background: #040c12;
-  }
-  .tui-fieldset {
-    border: 1px solid #1a3a4e !important;
-    padding: 10px 14px;
-    margin-top: 10px;
-  }
-  .tui-fieldset legend {
-    color: #44ccff;
-    font-weight: bold;
-    padding: 0 6px;
-  }
-</style>
 
-<div id="loading" class="tui-window full-width" style="padding:12px">
-  <div class="tui-progress-bar tui-indeterminate"></div>
-  <p class="white-text">Cargando transacciones...</p>
+<div id="loading" class="flex items-center gap-3 p-6 text-base-content/60">
+  <span class="loading loading-spinner loading-md text-primary"></span>
+  <span class="text-sm">Cargando transacciones...</span>
 </div>
 
-<div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
-  <p class="red-255-text" id="error-msg"></p>
+<div id="error" class="alert alert-error text-sm" style="display:none">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/></svg>
+  <span id="error-msg"></span>
 </div>
 
-<div id="empty" class="tui-window full-width" style="padding:16px;text-align:center;display:none">
-  <p class="white-text">Sin transacciones. <a href="/upload" class="cyan-255-text">Subí un archivo</a> para importar.</p>
+<div id="empty" class="alert text-sm" style="display:none">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+  <span>Sin transacciones. <a href="/upload" class="link link-primary">Subí un archivo</a> para importar.</span>
 </div>
 
-<div id="table-container" class="cc-card full-width" style="overflow-x:auto;display:none">
-  <fieldset class="tui-fieldset">
-    <legend id="table-legend">Transacciones</legend>
-    <table class="tui-table hovered-cyan" style="width:100%">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Descripción</th>
-          <th>Monto</th>
-          <th>Moneda</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
-  </fieldset>
+<div id="table-container" class="card bg-base-200 shadow" style="display:none">
+  <div class="card-body p-4">
+    <h2 id="table-legend" class="card-title text-primary text-sm">Transacciones</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th class="text-right">Monto</th>
+            <th>Moneda</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -70,10 +56,10 @@
         tr.id = 'row-' + t.id;
         const amtClass = t.amount > 0 ? 'positive' : 'negative';
         tr.innerHTML =
-          '<td class="white-text">' + t.date + '</td>' +
-          '<td class="white-text">' + t.description + '</td>' +
-          '<td class="' + amtClass + '">' + fmt(t.amount) + '</td>' +
-          '<td class="white-text">' + t.currency + '</td>';
+          '<td>' + t.date + '</td>' +
+          '<td>' + t.description + '</td>' +
+          '<td class="text-right ' + amtClass + '">' + fmt(t.amount) + '</td>' +
+          '<td>' + t.currency + '</td>';
         tbody.appendChild(tr);
       });
       document.getElementById('table-container').style.display = '';

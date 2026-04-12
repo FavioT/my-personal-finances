@@ -1,28 +1,134 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  .cc-card {
-    border: 1px solid #2e5a7a;
-    padding: 14px 16px 10px;
-    background: #040c12;
-  }
-  .tui-fieldset {
-    border: 1px solid #1a3a4e !important;
-    padding: 10px 14px;
-    margin-top: 10px;
-  }
-  .tui-fieldset legend {
-    color: #44ccff;
-    font-weight: bold;
-    padding: 0 6px;
-  }
-  @media (max-width: 640px) {
-    .upload-grid { grid-template-columns: 1fr !important; }
-  }
-</style>
 
-<div class="upload-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  <!-- XLS -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title text-primary text-sm">Caja de ahorro (XLS / XLSX)</h2>
+      <p class="text-sm text-base-content/60 -mt-1">Subí tu extracto bancario</p>
+      <button class="btn btn-primary btn-sm mt-1" onclick="document.getElementById('xls-input').click()">Seleccionar archivo XLS/XLSX</button>
+      <input id="xls-input" type="file" accept=".xls,.xlsx" hidden>
+      <div id="xls-loading" class="hidden flex items-center gap-2 text-sm text-base-content/60">
+        <span class="loading loading-bars loading-sm"></span> Procesando...
+      </div>
+      <div id="xls-result" class="hidden"></div>
+      <p id="xls-error" class="text-error text-sm hidden"></p>
+    </div>
+  </div>
+
+  <!-- BBVA VISA -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title text-primary text-sm">BBVA VISA</h2>
+      <p class="text-sm text-base-content/60 -mt-1">Pegá el texto del resumen BBVA VISA</p>
+      <textarea id="bbva-visa-text" class="textarea textarea-bordered w-full text-sm" rows="7" placeholder="Pegá aquí el texto del resumen BBVA VISA..."></textarea>
+      <button class="btn btn-primary btn-sm" onclick="uploadText('bbva-visa', '/api/upload/credit-card/bbva-visa')">Importar BBVA VISA</button>
+      <div id="bbva-visa-loading" class="hidden flex items-center gap-2 text-sm text-base-content/60">
+        <span class="loading loading-bars loading-sm"></span> Procesando...
+      </div>
+      <div id="bbva-visa-result" class="hidden"></div>
+      <p id="bbva-visa-error" class="text-error text-sm hidden"></p>
+    </div>
+  </div>
+
+  <!-- BBVA Mastercard -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title text-primary text-sm">BBVA Mastercard</h2>
+      <p class="text-sm text-base-content/60 -mt-1">Pegá el texto del resumen BBVA Mastercard</p>
+      <textarea id="bbva-mc-text" class="textarea textarea-bordered w-full text-sm" rows="7" placeholder="Pegá aquí el texto del resumen BBVA Mastercard..."></textarea>
+      <button class="btn btn-warning btn-sm text-warning-content" onclick="uploadText('bbva-mc', '/api/upload/credit-card/bbva-mastercard')">Importar BBVA Mastercard</button>
+      <div id="bbva-mc-loading" class="hidden flex items-center gap-2 text-sm text-base-content/60">
+        <span class="loading loading-bars loading-sm"></span> Procesando...
+      </div>
+      <div id="bbva-mc-result" class="hidden"></div>
+      <p id="bbva-mc-error" class="text-error text-sm hidden"></p>
+    </div>
+  </div>
+
+  <!-- Macro -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title text-primary text-sm">Macro Mastercard</h2>
+      <p class="text-sm text-base-content/60 -mt-1">Pegá el texto del resumen Macro</p>
+      <textarea id="macro-text" class="textarea textarea-bordered w-full text-sm" rows="7" placeholder="Pegá aquí el texto del resumen Macro..."></textarea>
+      <button class="btn btn-warning btn-sm text-warning-content" onclick="uploadText('macro', '/api/upload/credit-card/macro')">Importar Macro</button>
+      <div id="macro-loading" class="hidden flex items-center gap-2 text-sm text-base-content/60">
+        <span class="loading loading-bars loading-sm"></span> Procesando...
+      </div>
+      <div id="macro-result" class="hidden"></div>
+      <p id="macro-error" class="text-error text-sm hidden"></p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('xls-input').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const loading = document.getElementById('xls-loading');
+    const result  = document.getElementById('xls-result');
+    const error   = document.getElementById('xls-error');
+    loading.classList.remove('hidden'); result.classList.add('hidden'); error.classList.add('hidden');
+    const fd = new FormData();
+    fd.append('file', file);
+    fetch('/api/upload/xls', { method: 'POST', body: fd })
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        loading.classList.add('hidden');
+        if (ok) {
+          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + data.length + ' transacciones importadas.</div>';
+          result.classList.remove('hidden');
+        } else {
+          error.textContent = data.detail || 'Error al subir el archivo.';
+          error.classList.remove('hidden');
+        }
+      })
+      .catch(() => {
+        loading.classList.add('hidden');
+        error.textContent = 'Error al subir el archivo.';
+        error.classList.remove('hidden');
+      });
+  });
+
+  function uploadText(prefix, url) {
+    const text = document.getElementById(prefix + '-text').value.trim();
+    if (!text) return;
+    const loading = document.getElementById(prefix + '-loading');
+    const result  = document.getElementById(prefix + '-result');
+    const error   = document.getElementById(prefix + '-error');
+    loading.classList.remove('hidden'); result.classList.add('hidden'); error.classList.add('hidden');
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        loading.classList.add('hidden');
+        if (ok) {
+          document.getElementById(prefix + '-text').value = '';
+          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + data.length + ' transacciones importadas.</div>';
+          result.classList.remove('hidden');
+        } else {
+          error.textContent = data.detail || 'Error al procesar el resumen.';
+          error.classList.remove('hidden');
+        }
+      })
+      .catch(() => {
+        loading.classList.add('hidden');
+        error.textContent = 'Error al procesar el resumen.';
+        error.classList.remove('hidden');
+      });
+  }
+</script>
+{% endblock %}
 
   <!-- XLS -->
   <div class="cc-card full-width">

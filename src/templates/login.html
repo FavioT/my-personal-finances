@@ -1,98 +1,43 @@
 <!DOCTYPE html>
-<html lang="es" class="tui-bg-blue-black">
+<html lang="es" data-theme="aqua">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso — Mis Finanzas</title>
-  <link rel="stylesheet" href="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23040c12'/><rect x='1.5' y='1.5' width='29' height='29' rx='3' fill='none' stroke='%232e5a7a' stroke-width='2'/><line x1='16' y1='6' x2='16' y2='10' stroke='%2344ccff' stroke-width='2' stroke-linecap='round'/><line x1='16' y1='22' x2='16' y2='26' stroke='%2344ccff' stroke-width='2' stroke-linecap='round'/><path d='M20 10h-6a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-6' fill='none' stroke='%2344ccff' stroke-width='2.2' stroke-linecap='round'/></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: transparent !important; }
-    .login-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .login-box {
-      border: 1px solid #2e5a7a;
-      background: #040c12;
-      padding: 32px 36px 28px;
-      width: 100%;
-      max-width: 320px;
-    }
-    .login-box fieldset {
-      border: 1px solid #1a3a4e;
-      padding: 16px 18px 18px;
-      margin-top: 10px;
-    }
-    .login-box legend {
-      color: #44ccff;
-      font-weight: bold;
-      padding: 0 6px;
-    }
-    .pin-inputs {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin: 16px 0 20px;
-    }
-    .pin-inputs input {
-      width: 48px;
-      height: 52px;
-      text-align: center;
-      font-size: 22px;
-      font-family: monospace;
-      background: #071520;
-      border: 1px solid #2e5a7a;
-      color: #44ccff;
-      caret-color: transparent;
-    }
-    .pin-inputs input:focus {
-      outline: none;
-      border-color: #44ccff;
-      background: #0a1e2e;
-    }
-    .error-msg {
-      color: #ff6666;
-      font-size: 12px;
-      text-align: center;
-      margin-bottom: 14px;
-    }
-    .title-line {
-      text-align: center;
-      color: #cce6ee;
-      font-size: 13px;
-      letter-spacing: .08em;
-      margin-bottom: 0;
-    }
+    .pin-digit { caret-color: transparent; }
   </style>
 </head>
-<body>
-  <div class="login-wrap">
-    <div class="login-box">
-      <p class="title-line">MIS FINANZAS PERSONALES</p>
-      <fieldset>
-        <legend>Verificación</legend>
-        {% if error %}
-        <p class="error-msg">{{ error }}</p>
-        {% endif %}
-        <form method="POST" action="/login" id="pin-form">
-          <div class="pin-inputs">
-            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" autofocus autocomplete="off">
-            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" autocomplete="off">
-            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" autocomplete="off">
-            <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" autocomplete="off">
-          </div>
-          <input type="hidden" name="pin" id="pin-hidden">
-          <div style="text-align:center">
-            <button type="submit" class="tui-button cyan-168 white-text">Ingresar</button>
-          </div>
-        </form>
-      </fieldset>
+<body class="min-h-screen flex items-center justify-center bg-base-100">
+
+  <div class="card w-80 bg-base-200 shadow-xl">
+    <div class="card-body items-center gap-3">
+      <p class="text-xs tracking-widest text-base-content/50 uppercase">Mis Finanzas Personales</p>
+      <div class="divider my-0 text-xs text-base-content/40">Verificación</div>
+
+      {% if error %}
+      <div class="alert alert-error text-sm py-2 px-3 w-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/></svg>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/login" id="pin-form" class="w-full">
+        <div class="flex gap-3 justify-center my-4">
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit input input-bordered input-primary w-12 h-14 text-center text-2xl font-mono" autofocus autocomplete="off">
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit input input-bordered input-primary w-12 h-14 text-center text-2xl font-mono" autocomplete="off">
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit input input-bordered input-primary w-12 h-14 text-center text-2xl font-mono" autocomplete="off">
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit input input-bordered input-primary w-12 h-14 text-center text-2xl font-mono" autocomplete="off">
+        </div>
+        <input type="hidden" name="pin" id="pin-hidden">
+        <button type="submit" class="btn btn-primary w-full">Ingresar</button>
+      </form>
     </div>
   </div>
 
-  <script src="https://unpkg.com/tuicss@2.1.2/dist/tuicss.min.js"></script>
   <script>
     const digits = document.querySelectorAll('.pin-digit');
     const hidden = document.getElementById('pin-hidden');
@@ -100,7 +45,6 @@
 
     digits.forEach((inp, i) => {
       inp.addEventListener('input', () => {
-        // Solo aceptar dígitos
         inp.value = inp.value.replace(/\D/g, '').slice(-1);
         if (inp.value && i < digits.length - 1) digits[i + 1].focus();
         syncHidden();

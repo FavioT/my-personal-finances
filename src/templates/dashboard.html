@@ -2,105 +2,75 @@
 
 {% block content %}
 <style>
-  /* ── Layout ──────────────────────────────────────────── */
-  .year-nav { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  /* ── Dashboard table ─────────────────────────────────── */
   #dashboard-wrap { overflow-x: auto; }
+  #dashboard-table { min-width: 980px; width: 100%; font-size: 12.5px; border-collapse: collapse; }
+  #dashboard-table th, #dashboard-table td { white-space: nowrap; padding: 5px 10px; }
+  #dashboard-table td { background: oklch(var(--b1)); color: oklch(var(--bc)); border-bottom: 1px solid oklch(var(--b3)); }
 
-  /* ── Summary cards ───────────────────────────────────── */
-  .summary-cards { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
-  .s-card {
-    border: 1px solid #2e7a2e;
-    padding: 8px 18px;
-    min-width: 170px;
-    background: #071407;
-  }
-  .s-card .s-label { font-size:10px; color:#80bb80; text-transform:uppercase; letter-spacing:.1em; }
-  .s-card .s-value { font-size:17px; font-weight:bold; margin-top:4px; }
-
-  /* ── Table base ──────────────────────────────────────── */
-  #dashboard-table { min-width: 980px; width: 100%; font-size: 12.5px; }
-  #dashboard-table th, #dashboard-table td { white-space: nowrap; }
-  /* Default cell bg — override TuiCSS white */
-  #dashboard-table td { background: #05100a !important; color: #cceecc; }
-
-  /* ── Sticky thead ────────────────────────────────────── */
   #dashboard-table thead th {
     position: sticky; top: 0; z-index: 3;
     text-align: center;
-    color: #ccff66;
-    background: #040d08 !important;
-    border-bottom: 1px solid #2e7a2e !important;
+    color: oklch(var(--p));
+    background: oklch(var(--b2));
+    border-bottom: 1px solid oklch(var(--b3));
   }
-
-  /* ── Sticky label column ─────────────────────────────── */
   .col-label {
     min-width: 220px; max-width: 260px;
     text-align: left !important;
     position: sticky; left: 0; z-index: 2;
-    color: #ddeedd !important;
-    background: #040d08 !important;
+    background: oklch(var(--b2)) !important;
+    color: oklch(var(--bc)) !important;
   }
   thead .col-label { z-index: 4; }
 
-  /* ── Number columns ──────────────────────────────────── */
   .col-num { text-align: right; min-width: 105px; }
 
-  /* ── Current month highlight ─────────────────────────── */
-  thead .cur-month { background: #1f1400 !important; color: #ffdd44 !important; border-bottom: 2px solid #ffdd44 !important; }
-  tbody .cur-month { background: #110d00 !important; }
+  thead .cur-month { background: oklch(var(--wa) / .25) !important; color: oklch(var(--wa)) !important; border-bottom: 2px solid oklch(var(--wa)) !important; }
+  tbody .cur-month { background: oklch(var(--wa) / .10) !important; }
 
-  /* ── Section header rows ─────────────────────────────── */
   .row-section td {
-    background: #0c2a10 !important;
-    color: #88ffaa !important;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    background: oklch(var(--b3)) !important;
+    color: oklch(var(--p)) !important;
+    font-size: 11px; font-weight: bold;
+    letter-spacing: .12em; text-transform: uppercase;
     padding: 7px 10px;
-    border-top: 2px solid #2e7a3e !important;
-    border-bottom: 1px solid #1a4a22 !important;
+    border-top: 2px solid oklch(var(--b3)) !important;
   }
-
-  /* ── Total rows ──────────────────────────────────────── */
   .row-total td {
-    background: #150f00 !important;
-    color: #ffee55 !important;
+    background: oklch(var(--wa) / .15) !important;
+    color: oklch(var(--wa)) !important;
     font-weight: bold;
-    border-top: 1px solid #4a3800 !important;
-    border-bottom: 1px solid #4a3800 !important;
+    border-top: 1px solid oklch(var(--b3)) !important;
   }
-  .row-total .col-label { background: #0e0900 !important; }
+  .row-total .col-label { background: oklch(var(--wa) / .10) !important; }
+  .row-sub td { background: oklch(var(--b2)) !important; }
+  .row-sub .col-label { padding-left: 22px !important; color: oklch(var(--bc) / .45) !important; }
 
-  /* ── Sub-rows (detail lines) ─────────────────────────── */
-  .row-sub td { background: #040d06 !important; }
-  .row-sub .col-label { padding-left: 22px !important; color: #99aa99 !important; }
-
-  /* ── Value colors ────────────────────────────────────── */
-  .c-pos   { color: #44ff88; }
-  .c-neg   { color: #ff5555; }
-  .c-zero  { color: #557755; }
-  .c-empty { color: #253525; }
+  .c-pos   { color: oklch(var(--su)); }
+  .c-neg   { color: oklch(var(--er)); }
+  .c-zero  { color: oklch(var(--bc) / .35); }
+  .c-empty { color: oklch(var(--bc) / .20); }
 </style>
 
-<div class="year-nav">
-  <button class="tui-button" onclick="changeYear(-1)">&#9664;</button>
-  <span class="white-255-text" id="year-label" style="font-size:1.1em;min-width:56px;text-align:center;font-weight:bold"></span>
-  <button class="tui-button" onclick="changeYear(1)">&#9654;</button>
+<div class="flex items-center gap-2 mb-4">
+  <button class="btn btn-sm btn-ghost btn-square" onclick="changeYear(-1)">&#9664;</button>
+  <span id="year-label" class="text-lg font-bold min-w-14 text-center text-base-content"></span>
+  <button class="btn btn-sm btn-ghost btn-square" onclick="changeYear(1)">&#9654;</button>
 </div>
 
-<div class="summary-cards" id="summary-cards" style="display:none"></div>
+<div id="summary-cards" class="stats stats-horizontal shadow flex-wrap mb-4 bg-base-200" style="display:none"></div>
 
-<div id="loading" class="tui-window full-width" style="padding:12px">
-  <div class="tui-progress-bar tui-indeterminate"></div>
-  <p class="white-text">Cargando...</p>
+<div id="loading" class="flex items-center gap-3 p-6 text-base-content/60">
+  <span class="loading loading-spinner loading-md text-primary"></span>
+  <span class="text-sm">Cargando...</span>
 </div>
-<div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
-  <p class="red-255-text" id="error-msg"></p>
+<div id="error" class="alert alert-error text-sm" style="display:none">
+  <span id="error-msg"></span>
 </div>
 
 <div id="dashboard-wrap" style="display:none">
-  <table id="dashboard-table" class="tui-table hovered-green">
+  <table id="dashboard-table">
     <thead id="t-head"></thead>
     <tbody id="t-body"></tbody>
   </table>
@@ -141,14 +111,14 @@
     return { text: formatARS(n), cls: 'c-neg' };
   }
 
-  function cell(content, extra = '') {
-    const { text, cls } = content;
-    return `<td class="col-num ${cls} ${extra}">${text}</td>`;
+  function cell(v, extra) {
+    const cls = ['col-num', v.cls, extra].filter(Boolean).join(' ');
+    return `<td class="${cls}">${v.text}</td>`;
   }
 
   function buildRow(label, values, fmtFn, { isTotalRow = false, isSubRow = false } = {}) {
     const cls = [isTotalRow ? 'row-total' : '', isSubRow ? 'row-sub' : ''].filter(Boolean).join(' ');
-    let html = `<tr class="${cls}"><td class="col-label white-255-text">${label}</td>`;
+    let html = `<tr class="${cls}"><td class="col-label">${label}</td>`;
     values.forEach((v, i) => {
       const isCur = currentYear === new Date().getFullYear() && i + 1 === currentMonth;
       html += cell(fmtFn(v), isCur ? 'cur-month' : '');
@@ -204,9 +174,9 @@
         ];
         const cardsEl = document.getElementById('summary-cards');
         cardsEl.innerHTML = cards.map(c =>
-          `<div class="s-card"><div class="s-label">${c.label}</div><div class="s-value ${c.v.cls}">${c.v.text}</div></div>`
+          `<div class="stat"><div class="stat-title text-xs">${c.label}</div><div class="stat-value text-lg ${c.v.cls}">${c.v.text}</div></div>`
         ).join('');
-        cardsEl.style.display = 'flex';
+        cardsEl.style.display = '';
 
         // ── Header ────────────────────────────────────────
         let head = `<tr><th class="col-label"></th>`;
