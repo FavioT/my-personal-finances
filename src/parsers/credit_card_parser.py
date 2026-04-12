@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from fastapi import HTTPException
+
 from parsers.pdf_parser import _is_macro_format, _parse_macro_text, _is_bbva_format, _parse_bbva_text
 
 
@@ -45,7 +45,7 @@ def parse_credit_card_text(text: str, bank: str) -> list[dict]:
     Lines that do not match are silently skipped (headers, footers, totals, etc.).
     """
     if not text or not text.strip():
-        raise HTTPException(status_code=400, detail="The submitted text is empty.")
+        raise ValueError("The submitted text is empty.")
 
     # Macro format uses Spanish month names instead of numeric dates
     if bank.lower() == "macro" and _is_macro_format(text):
@@ -101,12 +101,9 @@ def parse_credit_card_text(text: str, bank: str) -> list[dict]:
         )
 
     if not transactions:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "No transactions could be parsed from the submitted text. "
-                "Make sure each line contains a date (DD/MM/YYYY), a description, and an amount."
-            ),
+        raise ValueError(
+            "No transactions could be parsed from the submitted text. "
+            "Make sure each line contains a date (DD/MM/YYYY), a description, and an amount."
         )
 
     return transactions

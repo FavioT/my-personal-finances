@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional
 import pdfplumber
 import pandas as pd
-from fastapi import HTTPException
+
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +218,7 @@ def parse_pdf(file, source_name: str) -> list[dict]:
     try:
         pdf = pdfplumber.open(file)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Cannot open PDF file: {exc}")
+        raise ValueError(f"Cannot open PDF file: {exc}")
 
     # Extract full text from all pages
     full_text = "\n".join(
@@ -231,10 +231,7 @@ def parse_pdf(file, source_name: str) -> list[dict]:
         transactions = _parse_macro_text(full_text, source_name)
         if transactions:
             return transactions
-        raise HTTPException(
-            status_code=400,
-            detail="Macro format detected but no transactions could be parsed. Check the PDF content.",
-        )
+        raise ValueError("Macro format detected but no transactions could be parsed. Check the PDF content.")
 
     # --- Fallback: generic table extraction ---
     all_rows: list[list] = []
@@ -254,10 +251,7 @@ def parse_pdf(file, source_name: str) -> list[dict]:
     pdf.close()
 
     if headers is None or not all_rows:
-        raise HTTPException(
-            status_code=400,
-            detail="No tables found in the PDF. Please verify the file contains tabular data.",
-        )
+        raise ValueError("No tables found in the PDF. Please verify the file contains tabular data.")
 
     df = pd.DataFrame(all_rows, columns=headers)
 
@@ -268,13 +262,10 @@ def parse_pdf(file, source_name: str) -> list[dict]:
     credit_col = _find_column(list(df.columns), CREDIT_COLS)
 
     if not date_col or not desc_col:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Could not auto-detect required columns (date, description) in the PDF. "
-                f"Detected columns: {list(df.columns)}. "
-                "Please adapt the parser in backend/parsers/pdf_parser.py."
-            ),
+        raise ValueError(
+            f"Could not auto-detect required columns (date, description) in the PDF. "
+            f"Detected columns: {list(df.columns)}. "
+            "Please adapt the parser in backend/parsers/pdf_parser.py."
         )
 
     transactions = []
@@ -305,12 +296,9 @@ def parse_pdf(file, source_name: str) -> list[dict]:
                 credit = 0.0
             amount = credit - debit
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"Could not detect amount column. Detected columns: {list(df.columns)}. "
-                    "Please adapt the parser in backend/parsers/pdf_parser.py."
-                ),
+            raise ValueError(
+                f"Could not detect amount column. Detected columns: {list(df.columns)}. "
+                "Please adapt the parser in backend/parsers/pdf_parser.py."
             )
 
         transactions.append(

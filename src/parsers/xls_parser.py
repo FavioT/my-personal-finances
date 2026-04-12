@@ -1,7 +1,7 @@
 from typing import Optional
 import io
 import pandas as pd
-from fastapi import HTTPException
+
 
 
 # Common column name mappings (lowercase)
@@ -56,10 +56,10 @@ def parse_xls(file, source_name: str) -> list[dict]:
     try:
         df = pd.read_excel(io.BytesIO(content), header=header_row)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Cannot read Excel file: {exc}")
+        raise ValueError(f"Cannot read Excel file: {exc}")
 
     if df.empty:
-        raise HTTPException(status_code=400, detail="The Excel file is empty.")
+        raise ValueError("The Excel file is empty.")
 
     columns = list(df.columns)
 
@@ -70,13 +70,10 @@ def parse_xls(file, source_name: str) -> list[dict]:
     credit_col = _find_column(columns, CREDIT_COLS)
 
     if not date_col or not desc_col:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Could not auto-detect required columns (date, description) in the file. "
-                f"Detected columns: {columns}. "
-                "Please adapt the parser in backend/parsers/xls_parser.py."
-            ),
+        raise ValueError(
+            f"Could not auto-detect required columns (date, description) in the file. "
+            f"Detected columns: {columns}. "
+            "Please adapt the parser in backend/parsers/xls_parser.py."
         )
 
     # If a nameless column sits immediately after the description column,
@@ -108,12 +105,9 @@ def parse_xls(file, source_name: str) -> list[dict]:
         elif debit_col and credit_col:
             amount = _parse_amount(row[credit_col]) - _parse_amount(row[debit_col])
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"Could not detect amount column. Detected columns: {columns}. "
-                    "Please adapt the parser in backend/parsers/xls_parser.py."
-                ),
+            raise ValueError(
+                f"Could not detect amount column. Detected columns: {columns}. "
+                "Please adapt the parser in backend/parsers/xls_parser.py."
             )
 
         transactions.append(
