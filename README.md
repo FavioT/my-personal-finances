@@ -1,6 +1,6 @@
 # My Personal Finances
 
-Flask app for tracking personal finances. Import bank statements (XLS) and credit card summaries, visualize monthly budgets and credit card debt. Deployed on Vercel + Neon PostgreSQL.
+Flask app para tracking de finanzas personales/familiares. Se puede importar el extracto del resumen de la cuenta de banco (XLS) y los resumenes de las tarjetas de crédito (texto plano), se visualizan datos con budget mensual y deuda. Deploy en Vercel + Neon PostgreSQL.
 
 ## Stack
 
