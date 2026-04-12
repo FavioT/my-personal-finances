@@ -1,95 +1,249 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  /* ── Layout ──────────────────────────────────────────── */
+  .year-nav { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  #dashboard-wrap { overflow-x: auto; }
+
+  /* ── Summary cards ───────────────────────────────────── */
+  .summary-cards { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .s-card {
+    border: 1px solid #2e7a2e;
+    padding: 8px 18px;
+    min-width: 170px;
+    background: #071407;
+  }
+  .s-card .s-label { font-size:10px; color:#80bb80; text-transform:uppercase; letter-spacing:.1em; }
+  .s-card .s-value { font-size:17px; font-weight:bold; margin-top:4px; }
+
+  /* ── Table base ──────────────────────────────────────── */
+  #dashboard-table { min-width: 980px; width: 100%; font-size: 12.5px; }
+  #dashboard-table th, #dashboard-table td { white-space: nowrap; }
+  /* Default cell bg — override TuiCSS white */
+  #dashboard-table td { background: #05100a !important; color: #cceecc; }
+
+  /* ── Sticky thead ────────────────────────────────────── */
+  #dashboard-table thead th {
+    position: sticky; top: 0; z-index: 3;
+    text-align: center;
+    color: #ccff66;
+    background: #040d08 !important;
+    border-bottom: 1px solid #2e7a2e !important;
+  }
+
+  /* ── Sticky label column ─────────────────────────────── */
+  .col-label {
+    min-width: 220px; max-width: 260px;
+    text-align: left !important;
+    position: sticky; left: 0; z-index: 2;
+    color: #ddeedd !important;
+    background: #040d08 !important;
+  }
+  thead .col-label { z-index: 4; }
+
+  /* ── Number columns ──────────────────────────────────── */
+  .col-num { text-align: right; min-width: 105px; }
+
+  /* ── Current month highlight ─────────────────────────── */
+  thead .cur-month { background: #1f1400 !important; color: #ffdd44 !important; border-bottom: 2px solid #ffdd44 !important; }
+  tbody .cur-month { background: #110d00 !important; }
+
+  /* ── Section header rows ─────────────────────────────── */
+  .row-section td {
+    background: #0c2a10 !important;
+    color: #88ffaa !important;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 7px 10px;
+    border-top: 2px solid #2e7a3e !important;
+    border-bottom: 1px solid #1a4a22 !important;
+  }
+
+  /* ── Total rows ──────────────────────────────────────── */
+  .row-total td {
+    background: #150f00 !important;
+    color: #ffee55 !important;
+    font-weight: bold;
+    border-top: 1px solid #4a3800 !important;
+    border-bottom: 1px solid #4a3800 !important;
+  }
+  .row-total .col-label { background: #0e0900 !important; }
+
+  /* ── Sub-rows (detail lines) ─────────────────────────── */
+  .row-sub td { background: #040d06 !important; }
+  .row-sub .col-label { padding-left: 22px !important; color: #99aa99 !important; }
+
+  /* ── Value colors ────────────────────────────────────── */
+  .c-pos   { color: #44ff88; }
+  .c-neg   { color: #ff5555; }
+  .c-zero  { color: #557755; }
+  .c-empty { color: #253525; }
+</style>
+
+<div class="year-nav">
+  <button class="tui-button" onclick="changeYear(-1)">&#9664;</button>
+  <span class="white-255-text" id="year-label" style="font-size:1.1em;min-width:56px;text-align:center;font-weight:bold"></span>
+  <button class="tui-button" onclick="changeYear(1)">&#9654;</button>
+</div>
+
+<div class="summary-cards" id="summary-cards" style="display:none"></div>
+
 <div id="loading" class="tui-window full-width" style="padding:12px">
   <div class="tui-progress-bar tui-indeterminate"></div>
   <p class="white-text">Cargando...</p>
 </div>
-
 <div id="error" class="tui-window full-width" style="padding:12px;display:none;border-color:#ff5555">
   <p class="red-255-text" id="error-msg"></p>
 </div>
 
-<div id="content" style="display:none">
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-
-    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
-      <fieldset class="tui-fieldset">
-        <legend class="white-255-text">Ingresos</legend>
-        <p class="green-255-text" id="total-income" style="font-size:1.4em;margin:4px 0"></p>
-      </fieldset>
-    </div>
-
-    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
-      <fieldset class="tui-fieldset">
-        <legend class="white-255-text">Gastos</legend>
-        <p class="red-255-text" id="total-expenses" style="font-size:1.4em;margin:4px 0"></p>
-      </fieldset>
-    </div>
-
-    <div class="tui-window" style="flex:1;min-width:180px;padding:12px">
-      <fieldset class="tui-fieldset">
-        <legend class="white-255-text">Balance</legend>
-        <p id="balance" style="font-size:1.4em;margin:4px 0"></p>
-      </fieldset>
-    </div>
-
-  </div>
-
-  <div id="chart-container" class="tui-window full-width" style="padding:12px;display:none">
-    <fieldset class="tui-fieldset">
-      <legend class="white-255-text">Ingresos vs Gastos</legend>
-      <div style="max-width:340px;margin:0 auto">
-        <canvas id="pie-chart"></canvas>
-      </div>
-    </fieldset>
-  </div>
-
-  <div id="empty-state" class="tui-window full-width" style="padding:16px;text-align:center;display:none">
-    <p class="white-text">Sin transacciones. <a href="/upload" class="cyan-255-text">Subí tu primer archivo</a> para comenzar.</p>
-  </div>
+<div id="dashboard-wrap" style="display:none">
+  <table id="dashboard-table" class="tui-table hovered-green">
+    <thead id="t-head"></thead>
+    <tbody id="t-body"></tbody>
+  </table>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-  const fmt = n => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const MONTH_NAMES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  let currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
 
-  fetch('/api/transactions/summary')
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('content').style.display = '';
+  function changeYear(delta) { currentYear += delta; load(); }
 
-      document.getElementById('total-income').textContent = fmt(data.total_income);
-      document.getElementById('total-expenses').textContent = fmt(data.total_expenses);
+  function val(dict, ym) {
+    return dict[ym] !== undefined ? dict[ym] : null;
+  }
 
-      const balEl = document.getElementById('balance');
-      balEl.textContent = fmt(data.balance);
-      balEl.className = data.balance >= 0 ? 'green-255-text' : 'red-255-text';
-      balEl.style.cssText = 'font-size:1.4em;margin:4px 0';
+  function sumNonNull(arr) {
+    const nums = arr.filter(v => v !== null);
+    return nums.length ? nums.reduce((a, b) => a + b, 0) : null;
+  }
 
-      if (data.total_income > 0 || data.total_expenses < 0) {
-        document.getElementById('chart-container').style.display = '';
-        new Chart(document.getElementById('pie-chart'), {
-          type: 'pie',
-          data: {
-            labels: ['Ingresos', 'Gastos'],
-            datasets: [{
-              data: [data.total_income, Math.abs(data.total_expenses)],
-              backgroundColor: ['#00A800', '#A80000']
-            }]
-          }
-        });
-      } else {
-        document.getElementById('empty-state').style.display = '';
-      }
-    })
-    .catch(() => {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
-      document.getElementById('error').style.display = '';
+  function formatARS(n) {
+    return '$ ' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function fmt(n) {
+    if (n === null) return { text: '—', cls: 'c-empty' };
+    if (n === 0)    return { text: '$ 0', cls: 'c-zero' };
+    if (n < 0)      return { text: '(' + formatARS(n) + ')', cls: 'c-neg' };
+    return { text: formatARS(n), cls: 'c-pos' };
+  }
+
+  function fmtNeg(n) {
+    if (n === null) return { text: '—', cls: 'c-empty' };
+    if (n === 0)    return { text: '$ 0', cls: 'c-zero' };
+    return { text: formatARS(n), cls: 'c-neg' };
+  }
+
+  function cell(content, extra = '') {
+    const { text, cls } = content;
+    return `<td class="col-num ${cls} ${extra}">${text}</td>`;
+  }
+
+  function buildRow(label, values, fmtFn, { isTotalRow = false, isSubRow = false } = {}) {
+    const cls = [isTotalRow ? 'row-total' : '', isSubRow ? 'row-sub' : ''].filter(Boolean).join(' ');
+    let html = `<tr class="${cls}"><td class="col-label white-255-text">${label}</td>`;
+    values.forEach((v, i) => {
+      const isCur = currentYear === new Date().getFullYear() && i + 1 === currentMonth;
+      html += cell(fmtFn(v), isCur ? 'cur-month' : '');
     });
+    return html + '</tr>';
+  }
+
+  function buildSection(label) {
+    return `<tr class="row-section"><td colspan="13" class="col-label">▸ ${label}</td></tr>`;
+  }
+
+  function load() {
+    document.getElementById('year-label').textContent = currentYear;
+    document.getElementById('loading').style.display = '';
+    document.getElementById('dashboard-wrap').style.display = 'none';
+    document.getElementById('summary-cards').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+
+    fetch('/api/transactions/monthly-summary?year=' + currentYear)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('loading').style.display = 'none';
+
+        const months = Array.from({length: 12}, (_, i) =>
+          `${currentYear}-${String(i + 1).padStart(2, '0')}`
+        );
+        const shortYear = String(currentYear).slice(2);
+
+        // ── Row values ────────────────────────────────────
+        const incomeVals      = months.map(ym => val(data.income, ym));
+        const expensesVals    = months.map(ym => { const v = val(data.expenses, ym); return v ? -v : null; });
+        const creditVals      = months.map(ym => val(data.credit_card, ym));
+        const otherVals       = months.map(ym => val(data.other_expenses, ym));
+        const totalGastosVals = months.map((_, i) => {
+          const c = creditVals[i], o = otherVals[i];
+          return (c === null && o === null) ? null : (c || 0) + (o || 0);
+        });
+        const netoVals = months.map((_, i) => {
+          const inc = incomeVals[i], exp = expensesVals[i];
+          return (inc === null && exp === null) ? null : (inc || 0) + (exp || 0);
+        });
+
+        // ── Summary cards (YTD) ───────────────────────────
+        const ytdIncome = sumNonNull(incomeVals);
+        const ytdGastos = sumNonNull(totalGastosVals);
+        const ytdNeto   = (ytdIncome !== null || ytdGastos !== null)
+          ? (ytdIncome || 0) - (ytdGastos || 0) : null;
+
+        const cards = [
+          { label: 'Ingresos ' + currentYear,  v: fmt(ytdIncome) },
+          { label: 'Gastos ' + currentYear,     v: ytdGastos ? { text: '(' + formatARS(ytdGastos) + ')', cls: 'c-neg' } : { text: '$ 0', cls: 'c-zero' } },
+          { label: 'Resultado ' + currentYear,  v: fmt(ytdNeto) },
+        ];
+        const cardsEl = document.getElementById('summary-cards');
+        cardsEl.innerHTML = cards.map(c =>
+          `<div class="s-card"><div class="s-label">${c.label}</div><div class="s-value ${c.v.cls}">${c.v.text}</div></div>`
+        ).join('');
+        cardsEl.style.display = 'flex';
+
+        // ── Header ────────────────────────────────────────
+        let head = `<tr><th class="col-label"></th>`;
+        months.forEach((_, i) => {
+          const isCur = currentYear === new Date().getFullYear() && i + 1 === currentMonth;
+          head += `<th class="col-num ${isCur ? 'cur-month' : ''}">${MONTH_NAMES[i]} '${shortYear}</th>`;
+        });
+        head += '</tr>';
+        document.getElementById('t-head').innerHTML = head;
+
+        // ── Body ──────────────────────────────────────────
+        let body = '';
+
+        body += buildSection('RESUMEN PRESUPUESTO');
+        body += buildRow('Ingresos Totales', incomeVals,   fmt);
+        body += buildRow('Gastos Totales',   expensesVals, fmt);
+        body += buildRow('Resultado Neto',   netoVals,     fmt, { isTotalRow: true });
+
+        body += buildSection('INGRESOS');
+        body += buildRow('Total Ingresos', incomeVals, fmt, { isTotalRow: true });
+
+        body += buildSection('RESUMEN DE GASTOS');
+        body += buildRow('Tarjeta de Crédito',  creditVals,       fmtNeg, { isSubRow: true });
+        body += buildRow('Otros Gastos (banco)', otherVals,        fmtNeg, { isSubRow: true });
+        body += buildRow('Total Gastos',         totalGastosVals,  fmtNeg, { isTotalRow: true });
+
+        document.getElementById('t-body').innerHTML = body;
+        document.getElementById('dashboard-wrap').style.display = '';
+      })
+      .catch(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor.';
+        document.getElementById('error').style.display = '';
+      });
+  }
+
+  load();
 </script>
 {% endblock %}
+

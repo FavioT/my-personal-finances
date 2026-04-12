@@ -9,6 +9,46 @@ from schemas import (
 bp = Blueprint('transactions_api', __name__, url_prefix='/api/transactions')
 
 
+@bp.get('/monthly-summary')
+def monthly_summary():
+    db   = g.db
+    year = request.args.get('year', date.today().year, type=int)
+
+    txs = db.query(Transaction).filter(
+        Transaction.date >= date(year, 1, 1),
+        Transaction.date <= date(year, 12, 31),
+    ).all()
+
+    income         = {}
+    credit_card    = {}
+    other_expenses = {}
+
+    for tx in txs:
+        ym = tx.date.strftime('%Y-%m')
+        if tx.amount > 0:
+            income[ym] = round(income.get(ym, 0) + tx.amount, 2)
+        else:
+            amt = abs(tx.amount)
+            if tx.source_type.startswith('credit_card'):
+                credit_card[ym] = round(credit_card.get(ym, 0) + amt, 2)
+            else:
+                other_expenses[ym] = round(other_expenses.get(ym, 0) + amt, 2)
+
+    all_months = [f'{year}-{m:02d}' for m in range(1, 13)]
+    expenses = {
+        ym: round(credit_card.get(ym, 0) + other_expenses.get(ym, 0), 2)
+        for ym in all_months
+    }
+
+    return jsonify({
+        'year': year,
+        'income':         income,
+        'expenses':       expenses,
+        'credit_card':    credit_card,
+        'other_expenses': other_expenses,
+    })
+
+
 @bp.get('')
 def get_transactions():
     db = g.db
