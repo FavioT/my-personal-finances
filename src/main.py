@@ -8,7 +8,10 @@ load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')
 from flask import Flask, g, redirect, url_for, render_template
 from database import engine, Base, SessionLocal
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"[warn] create_all failed: {e}")
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
 
