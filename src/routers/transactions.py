@@ -1,9 +1,11 @@
 from datetime import date
 from flask import Blueprint, jsonify, request, g
+from sqlalchemy import func
 from models import Transaction
 from schemas import (
     TransactionResponse, SummaryResponse,
     CreditCardSummaryResponse, CardSummary, CreditCardInstallmentItem,
+    StatementPeriodInfo,
 )
 
 bp = Blueprint('transactions_api', __name__, url_prefix='/api/transactions')
@@ -208,3 +210,32 @@ def get_credit_card_summary():
         ))
 
     return jsonify(CreditCardSummaryResponse(cards=cards).model_dump(mode='json'))
+
+
+@bp.get('/periods')
+def get_periods():
+    """Return all distinct statement periods per source_type, with transaction count."""
+    db = g.db
+    rows = (
+        db.query(
+            Transaction.source_type,
+            Transaction.source,
+            Transaction.statement_period,
+            func.count(Transaction.id).label('transaction_count'),
+        )
+        .filter(Transaction.statement_period.isnot(None))
+        .group_by(Transaction.source_type, Transaction.source, Transaction.statement_period)
+        .order_by(Transaction.source_type, Transaction.statement_period.desc())
+        .all()
+    )
+    result = [
+        StatementPeriodInfo(
+            source_type=r.source_type,
+            source=r.source,
+            statement_period=r.statement_period,
+            transaction_count=r.transaction_count,
+        ).model_dump()
+        for r in rows
+    ]
+    return jsonify(result)
+

@@ -8,10 +8,11 @@ load_dotenv(dotenv_path=Path(__file__).parent / '.env')
 load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')
 
 from flask import Flask, g, redirect, url_for, render_template, request, session, jsonify
-from database import engine, Base, SessionLocal
+from database import engine, Base, SessionLocal, run_migrations
 
 try:
     Base.metadata.create_all(bind=engine)
+    run_migrations()
 except Exception as e:
     print(f"[warn] create_all failed: {e}")
 

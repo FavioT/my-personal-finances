@@ -9,20 +9,22 @@ Flask app para tracking de finanzas personales/familiares. Se puede importar el 
 - **DB:** PostgreSQL (Neon) in production, SQLite locally
 - **Deploy:** Vercel (Python serverless)
 
-## Setup local
+## Setup local (Linux)
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 Crear `.env` en la raíz:
 
-```env
-DATABASE_URL=sqlite:///local.db   # o tu conexión PostgreSQL
+```bash
+cat > .env << 'EOF'
+DATABASE_URL=sqlite:///local.db
 SECRET_KEY=una-clave-secreta
 APP_PIN=1234
+EOF
 ```
 
 Correr el servidor:
@@ -31,7 +33,7 @@ Correr el servidor:
 python src/main.py
 ```
 
-App disponible en `http://localhost:5000`.
+App disponible en `http://localhost:8000`.
 
 ## Deploy en Vercel
 

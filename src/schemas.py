@@ -11,6 +11,7 @@ class TransactionBase(BaseModel):
     category: Optional[str] = None
     source: str
     source_type: str
+    statement_period: Optional[str] = None
     installment_current: Optional[int] = None
     installment_total: Optional[int] = None
 
@@ -62,3 +63,11 @@ class CardSummary(BaseModel):
 
 class CreditCardSummaryResponse(BaseModel):
     cards: list[CardSummary]
+
+
+class StatementPeriodInfo(BaseModel):
+    source_type: str
+    source: str
+    statement_period: str
+    transaction_count: int
+
