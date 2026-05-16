@@ -43,6 +43,7 @@ class CreditCardInstallmentItem(BaseModel):
     description: str
     date: date
     monthly_amount: float
+    currency: str = "ARS"
     installment_current: int
     installment_total: int
     pending_installments: int

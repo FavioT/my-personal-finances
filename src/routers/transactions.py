@@ -198,6 +198,7 @@ def get_credit_card_summary():
                 description=tx.description,
                 date=tx.date,
                 monthly_amount=round(monthly, 2),
+                currency=tx.currency or 'ARS',
                 installment_current=inst_current,
                 installment_total=inst_total,
                 pending_installments=pending,

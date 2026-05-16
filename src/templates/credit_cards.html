@@ -27,6 +27,12 @@
 {% block scripts %}
 <script>
   const fmt = n => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const fmtCurrency = (n, currency, description) => {
+    const isUsd = (currency || 'ARS').toUpperCase() === 'USD'
+      || /USD/i.test(description || '');
+    const symbol = isUsd ? 'U$S ' : '$ ';
+    return symbol + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  };
   const pct = n => Number(n).toLocaleString('es-AR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%';
 
   function sumBy(arr, selector) {
@@ -122,10 +128,14 @@
       allItems.forEach(item => {
         const merchant = normalizeMerchant(item.description) || 'Sin descripcion';
         if (!merchantAgg[merchant]) {
-          merchantAgg[merchant] = { merchant, count: 0, monthly: 0 };
+          merchantAgg[merchant] = { merchant, count: 0, monthly: 0, currency: item.currency || 'ARS' };
         }
         merchantAgg[merchant].count += 1;
         merchantAgg[merchant].monthly += Number(item.monthly_amount || 0);
+        // si algún ítem del comercio es USD, marcar como USD
+        if ((item.currency || 'ARS').toUpperCase() === 'USD') {
+          merchantAgg[merchant].currency = 'USD';
+        }
       });
 
       const frequentMerchants = Object.values(merchantAgg)
@@ -161,7 +171,7 @@
         '<tr>' +
           '<td class="text-sm">' + escapeHtml(i.description) + '</td>' +
           '<td class="text-center text-sm">' + i.pending_installments + '</td>' +
-          '<td class="text-right text-sm">' + fmt(i.monthly_amount) + '</td>' +
+          '<td class="text-right text-sm">' + fmtCurrency(i.monthly_amount, i.currency, i.description) + '</td>' +
         '</tr>'
       ).join('') || '<tr><td colspan="3" class="text-sm text-base-content/60">Sin cuotas pendientes.</td></tr>';
 
@@ -231,11 +241,11 @@
         const rows = card.items.map(row =>
           '<tr>' +
           '<td class="text-sm">' + row.description + '</td>' +
-          '<td class="text-right text-sm">' + fmt(row.monthly_amount) + '</td>' +
+          '<td class="text-right text-sm">' + fmtCurrency(row.monthly_amount, row.currency, row.description) + '</td>' +
           '<td class="text-center text-sm text-base-content/50">' + row.installment_current + ' / ' + row.installment_total + '</td>' +
           '<td class="text-center text-sm text-base-content/50 hidden sm:table-cell">' + row.pending_installments + '</td>' +
-          '<td class="text-right text-sm text-error hidden sm:table-cell">' + fmt(row.remaining_debt) + '</td>' +
-          '<td class="text-right text-sm text-base-content/50 hidden md:table-cell">' + fmt(row.total_debt) + '</td>' +
+          '<td class="text-right text-sm text-error hidden sm:table-cell">' + fmtCurrency(row.remaining_debt, row.currency, row.description) + '</td>' +
+          '<td class="text-right text-sm text-base-content/50 hidden md:table-cell">' + fmtCurrency(row.total_debt, row.currency, row.description) + '</td>' +
           '<td class="text-center text-sm text-success hidden md:table-cell">' + formatMonth(row.payoff_month) + '</td>' +
           '</tr>'
         ).join('');
