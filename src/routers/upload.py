@@ -15,9 +15,24 @@ def _detect_period(parsed: list[dict]) -> str | None:
     return counts.most_common(1)[0][0]
 
 
-def _save_transactions(db, parsed: list[dict], source_type: str, statement_period: str | None) -> list:
-    """Delete existing transactions for the same source_type+period, then insert the new ones."""
-    if statement_period:
+def _save_transactions(
+    db,
+    parsed: list[dict],
+    source_type: str,
+    statement_period: str | None,
+    replace_all_for_source_type: bool = False,
+) -> list:
+    """Replace previous rows then insert new ones.
+
+    - For credit cards, we can replace the full source_type history.
+    - For bank XLS, we keep period-based replacement.
+    """
+    if replace_all_for_source_type:
+        db.query(Transaction).filter(
+            Transaction.source_type == source_type,
+        ).delete(synchronize_session=False)
+        db.flush()
+    elif statement_period:
         db.query(Transaction).filter(
             Transaction.source_type == source_type,
             Transaction.statement_period == statement_period,
@@ -55,7 +70,7 @@ def upload_xls():
     })
 
 
-def _upload_credit_card(bank: str, source_type: str):
+def _upload_credit_card(bank: str, source_type: str, replace_all_for_source_type: bool = False):
     db   = g.db
     data = request.get_json()
     if not data or 'text' not in data:
@@ -67,7 +82,13 @@ def _upload_credit_card(bank: str, source_type: str):
     except Exception as e:
         return jsonify({'detail': str(e)}), 400
     period = manual_period or _detect_period(parsed)
-    txs = _save_transactions(db, parsed, source_type=source_type, statement_period=period)
+    txs = _save_transactions(
+        db,
+        parsed,
+        source_type=source_type,
+        statement_period=period,
+        replace_all_for_source_type=replace_all_for_source_type,
+    )
     return jsonify({
         'transactions': [TransactionResponse.model_validate(t).model_dump(mode='json') for t in txs],
         'statement_period': period,
@@ -82,17 +103,17 @@ def upload_credit_card_bbva():
 
 @bp.post('/credit-card/bbva-visa')
 def upload_credit_card_bbva_visa():
-    return _upload_credit_card('bbva_visa', 'credit_card_bbva_visa')
+    return _upload_credit_card('bbva_visa', 'credit_card_bbva_visa', replace_all_for_source_type=True)
 
 
 @bp.post('/credit-card/bbva-mastercard')
 def upload_credit_card_bbva_mastercard():
-    return _upload_credit_card('bbva_mastercard', 'credit_card_bbva_mastercard')
+    return _upload_credit_card('bbva_mastercard', 'credit_card_bbva_mastercard', replace_all_for_source_type=True)
 
 
 @bp.post('/credit-card/macro')
 def upload_credit_card_macro():
-    return _upload_credit_card('macro', 'credit_card_macro')
+    return _upload_credit_card('macro', 'credit_card_macro', replace_all_for_source_type=True)
 
 
 @bp.delete('/credit-card/period')

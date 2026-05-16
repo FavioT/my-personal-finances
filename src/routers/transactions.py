@@ -160,14 +160,22 @@ def _add_months(d: date, months: int) -> date:
 @bp.get('/credit-card-summary')
 def get_credit_card_summary():
     db = g.db
+    card_source_types = [
+        'credit_card_bbva',
+        'credit_card_bbva_visa',
+        'credit_card_bbva_mastercard',
+        'credit_card_macro',
+    ]
+
+    last_updated_at = (
+        db.query(func.max(Transaction.created_at))
+        .filter(Transaction.source_type.in_(card_source_types))
+        .scalar()
+    )
+
     txs = (
         db.query(Transaction)
-        .filter(Transaction.source_type.in_([
-            'credit_card_bbva',
-            'credit_card_bbva_visa',
-            'credit_card_bbva_mastercard',
-            'credit_card_macro',
-        ]))
+        .filter(Transaction.source_type.in_(card_source_types))
         .order_by(Transaction.date)
         .all()
     )
@@ -209,7 +217,12 @@ def get_credit_card_summary():
             items=items,
         ))
 
-    return jsonify(CreditCardSummaryResponse(cards=cards).model_dump(mode='json'))
+    return jsonify(
+        CreditCardSummaryResponse(
+            cards=cards,
+            last_updated_at=last_updated_at,
+        ).model_dump(mode='json')
+    )
 
 
 @bp.get('/periods')

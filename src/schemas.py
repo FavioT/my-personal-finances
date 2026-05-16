@@ -63,6 +63,7 @@ class CardSummary(BaseModel):
 
 class CreditCardSummaryResponse(BaseModel):
     cards: list[CardSummary]
+    last_updated_at: Optional[datetime] = None
 
 
 class StatementPeriodInfo(BaseModel):

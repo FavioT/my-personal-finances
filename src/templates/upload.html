@@ -83,7 +83,8 @@
       .then(({ ok, data }) => {
         loading.classList.add('hidden');
         if (ok) {
-          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + data.length + ' transacciones importadas.</div>';
+          const count = Array.isArray(data.transactions) ? data.transactions.length : 0;
+          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + count + ' transacciones importadas.</div>';
           result.classList.remove('hidden');
         } else {
           error.textContent = data.detail || 'Error al subir el archivo.';
@@ -114,7 +115,8 @@
         loading.classList.add('hidden');
         if (ok) {
           document.getElementById(prefix + '-text').value = '';
-          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + data.length + ' transacciones importadas.</div>';
+          const count = Array.isArray(data.transactions) ? data.transactions.length : 0;
+          result.innerHTML = '<div class="alert alert-success text-sm py-2">&#10003; ' + count + ' transacciones importadas.</div>';
           result.classList.remove('hidden');
         } else {
           error.textContent = data.detail || 'Error al procesar el resumen.';

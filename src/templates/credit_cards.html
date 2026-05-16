@@ -7,6 +7,10 @@
   <span class="text-sm">Cargando tarjetas...</span>
 </div>
 
+<div id="last-updated" class="alert text-sm mb-4" style="display:none"></div>
+
+<div id="summary-metrics" class="mb-4" style="display:none"></div>
+
 <div id="error" class="alert alert-error text-sm" style="display:none">
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/></svg>
   <span id="error-msg"></span>
@@ -23,6 +27,61 @@
 {% block scripts %}
 <script>
   const fmt = n => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const pct = n => Number(n).toLocaleString('es-AR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%';
+
+  function sumBy(arr, selector) {
+    return arr.reduce((acc, x) => acc + Number(selector(x) || 0), 0);
+  }
+
+  function compareYm(a, b) {
+    return (a || '').localeCompare(b || '');
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function ymNow() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function addMonthsYm(ym, months) {
+    const [yy, mm] = (ym || '').split('-').map(Number);
+    if (!yy || !mm) return ym;
+    const total = (mm - 1) + months;
+    const year = yy + Math.floor(total / 12);
+    const month = (total % 12) + 1;
+    return year + '-' + String(month).padStart(2, '0');
+  }
+
+  function normalizeMerchant(description) {
+    const raw = String(description || '').toUpperCase().trim();
+    return raw
+      .replace(/\bC\.\d{1,2}\/\d{1,2}\b/g, '')
+      .replace(/\b\d{6,}\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ')
+      .slice(0, 3)
+      .join(' ');
+  }
+
+  function formatDateTime(isoDate) {
+    if (!isoDate) return '—';
+    return new Date(isoDate).toLocaleString('es-AR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 
   function formatMonth(ym) {
     if (!ym) return '—';
@@ -35,12 +94,140 @@
     .then(r => r.json())
     .then(data => {
       document.getElementById('loading').style.display = 'none';
-      if (data.cards.length === 0) {
+      const cards = Array.isArray(data.cards) ? data.cards : [];
+
+      if (data.last_updated_at) {
+        const lastUpdated = document.getElementById('last-updated');
+        lastUpdated.innerHTML = '<span>Ultima actualizacion: <b>' + formatDateTime(data.last_updated_at) + '</b></span>';
+        lastUpdated.style.display = '';
+      }
+
+      if (cards.length === 0) {
         document.getElementById('empty').style.display = '';
         return;
       }
+
+      const allItems = cards.flatMap(card => Array.isArray(card.items) ? card.items : []);
+      const totalMonthly = sumBy(cards, card => card.total_monthly);
+      const totalRemainingDebt = sumBy(cards, card => card.total_remaining_debt);
+      const totalDebt = sumBy(cards, card => card.total_debt);
+      const paidProgress = totalDebt > 0 ? ((totalDebt - totalRemainingDebt) / totalDebt) * 100 : 0;
+      const nearFinishCount = allItems.filter(i => Number(i.pending_installments || 0) <= 2).length;
+      const longTermCount = allItems.filter(i => Number(i.pending_installments || 0) > 6).length;
+      const payoffMonths = allItems.map(i => i.payoff_month).filter(Boolean).sort(compareYm);
+      const firstPayoff = payoffMonths.length ? payoffMonths[0] : null;
+      const lastPayoff = payoffMonths.length ? payoffMonths[payoffMonths.length - 1] : null;
+
+      const merchantAgg = {};
+      allItems.forEach(item => {
+        const merchant = normalizeMerchant(item.description) || 'Sin descripcion';
+        if (!merchantAgg[merchant]) {
+          merchantAgg[merchant] = { merchant, count: 0, monthly: 0 };
+        }
+        merchantAgg[merchant].count += 1;
+        merchantAgg[merchant].monthly += Number(item.monthly_amount || 0);
+      });
+
+      const frequentMerchants = Object.values(merchantAgg)
+        .sort((a, b) => b.count - a.count || b.monthly - a.monthly)
+        .slice(0, 5);
+
+      const highInstallments = [...allItems]
+        .filter(i => Number(i.pending_installments || 0) > 0)
+        .sort((a, b) => Number(b.monthly_amount || 0) - Number(a.monthly_amount || 0))
+        .slice(0, 5);
+
+      const schedule = {};
+      const startYm = ymNow();
+      allItems.forEach(item => {
+        const months = Math.max(Number(item.pending_installments || 0), 0);
+        const monthlyAmount = Number(item.monthly_amount || 0);
+        for (let step = 1; step <= months; step += 1) {
+          const ym = addMonthsYm(startYm, step);
+          schedule[ym] = (schedule[ym] || 0) + monthlyAmount;
+        }
+      });
+      const nextMonths = Object.keys(schedule).sort(compareYm).slice(0, 6);
+
+      const frequentRows = frequentMerchants.map(m =>
+        '<tr>' +
+          '<td class="text-sm">' + escapeHtml(m.merchant) + '</td>' +
+          '<td class="text-center text-sm">' + m.count + '</td>' +
+          '<td class="text-right text-sm">' + fmt(m.monthly) + '</td>' +
+        '</tr>'
+      ).join('') || '<tr><td colspan="3" class="text-sm text-base-content/60">Sin datos.</td></tr>';
+
+      const installmentRows = highInstallments.map(i =>
+        '<tr>' +
+          '<td class="text-sm">' + escapeHtml(i.description) + '</td>' +
+          '<td class="text-center text-sm">' + i.pending_installments + '</td>' +
+          '<td class="text-right text-sm">' + fmt(i.monthly_amount) + '</td>' +
+        '</tr>'
+      ).join('') || '<tr><td colspan="3" class="text-sm text-base-content/60">Sin cuotas pendientes.</td></tr>';
+
+      const scheduleChips = nextMonths.map(ym =>
+        '<div class="badge badge-outline gap-2 py-3 px-3 text-xs">' + formatMonth(ym) + ': <b>' + fmt(schedule[ym]) + '</b></div>'
+      ).join('') || '<span class="text-xs text-base-content/60">No hay saldos pendientes para proyectar.</span>';
+
+      const metrics = document.getElementById('summary-metrics');
+
+      metrics.innerHTML = `
+        <div class="card bg-base-200 shadow mb-4">
+          <div class="card-body">
+            <h2 class="card-title text-primary text-base">Resumen general de tarjetas</h2>
+            <div class="stats bg-base-300 shadow flex-wrap w-full">
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Cuota mensual total</div><div class="stat-value text-base text-error">${fmt(totalMonthly)}</div></div>
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Deuda restante total</div><div class="stat-value text-base text-error">${fmt(totalRemainingDebt)}</div></div>
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Avance de cancelacion</div><div class="stat-value text-base text-success">${pct(paidProgress)}</div></div>
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Tarjetas activas</div><div class="stat-value text-base">${cards.length}</div></div>
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Movimientos activos</div><div class="stat-value text-base">${allItems.length}</div></div>
+              <div class="stat py-3 px-4"><div class="stat-title text-xs">Cancelacion estimada</div><div class="stat-value text-base text-success">${formatMonth(lastPayoff)}</div></div>
+            </div>
+            <div class="text-xs text-base-content/70 mt-3">
+              Por terminar (<= 2 cuotas): <b>${nearFinishCount}</b> | Largo plazo (> 6 cuotas): <b>${longTermCount}</b> | Primer vencimiento estimado: <b>${formatMonth(firstPayoff)}</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="card bg-base-200 shadow">
+            <div class="card-body">
+              <h3 class="card-title text-sm">Cuotas por saldar por mes (proximos 6 meses)</h3>
+              <div class="flex flex-wrap gap-2">${scheduleChips}</div>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body">
+              <h3 class="card-title text-sm">Gastos mas frecuentes</h3>
+              <div class="overflow-x-auto">
+                <table class="table table-xs">
+                  <thead><tr><th>Comercio</th><th class="text-center">Freq.</th><th class="text-right">Cuota mensual</th></tr></thead>
+                  <tbody>${frequentRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body">
+              <h3 class="card-title text-sm">Cuotas mas altas por saldar</h3>
+              <div class="overflow-x-auto">
+                <table class="table table-xs">
+                  <thead><tr><th>Concepto</th><th class="text-center">Pend.</th><th class="text-right">Cuota</th></tr></thead>
+                  <tbody>${installmentRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      metrics.style.display = '';
+
       const container = document.getElementById('cards-container');
-      data.cards.forEach(card => {
+      cards.forEach(card => {
+        const shareRemaining = totalRemainingDebt > 0 ? (Number(card.total_remaining_debt || 0) / totalRemainingDebt) * 100 : 0;
+        const shareMonthly = totalMonthly > 0 ? (Number(card.total_monthly || 0) / totalMonthly) * 100 : 0;
         const rows = card.items.map(row =>
           '<tr>' +
           '<td class="text-sm">' + row.description + '</td>' +
@@ -60,6 +247,10 @@
             '<div class="flex items-baseline gap-3 mb-2">' +
               '<h2 class="card-title text-primary">' + card.card + '</h2>' +
               '<span class="text-xs text-base-content/40 uppercase tracking-widest">' + card.card_network + '</span>' +
+            '</div>' +
+            '<div class="flex flex-wrap gap-2 mb-2">' +
+              '<span class="badge badge-outline text-xs">' + pct(shareRemaining) + ' de la deuda total</span>' +
+              '<span class="badge badge-outline text-xs">' + pct(shareMonthly) + ' de la cuota mensual</span>' +
             '</div>' +
             '<div class="stats bg-base-300 shadow flex-wrap w-full">' +
               '<div class="stat py-3 px-4">' +
